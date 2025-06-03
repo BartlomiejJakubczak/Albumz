@@ -12,6 +12,14 @@ class Genre(models.TextChoices):
     HIPHOP = "HIPHOP", "Hip-Hop"
     OTHER = "OTHER", "Other"
 
+class Rating(models.IntegerChoices):
+    TERRIBLE = 1
+    BAD = 2
+    AVERAGE = 3
+    GOOD = 4
+    EXCELLENT = 5
+    BEST = 6
+
 class Artist(models.Model):
     name = models.CharField(max_length=250)
     country = models.CharField(max_length=100, blank=True) # blank = may be empty in form
@@ -27,7 +35,7 @@ class Album(models.Model):
 
     # example Django's ORM call:
 
-    # Album.objects.filter(artist__country="Poland") 
+    # Album.objects.filter(artist__country="Poland") (note: there's a hidden __exact field lookup here, so artist__country__exact would be the full explicit call)
     # which translates to:
     # SELECT * FROM album WHERE artist.country = 'Poland';
 
@@ -42,10 +50,18 @@ class Album(models.Model):
         choices=Genre.choices,
         default=Genre.OTHER
     )
+    user_rating = models.IntegerField(
+        "Rating given by the owner of the album.", 
+        choices=Rating.choices, 
+        default=0
+    )
+    add_date = models.DateField("Date of adding to the system.", auto_now_add=True)
+    # auto_now_add - sets the field to the current date/time only when the object is created.
+    # auto_now - sets the field to the current date/time every time the object is saved. (last modified for example)
 
     def __str__(self):
         return f"{self.title} by {self.artist.name}"
     
-    def was_published_recently(self):
-        return self.pub_date >= timezone.now() - datetime.timedelta(weeks=4) # this is possible due to __ge__ (greater-equal) and __sub__ of datetime
+    def was_added_recently(self):
+        return self.add_date >= timezone.now() - datetime.timedelta(weeks=12) # this is possible due to __ge__ (greater-equal) and __sub__ of datetime
 

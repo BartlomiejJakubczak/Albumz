@@ -1,0 +1,19 @@
+<h1>{{ album.title }}</h1>
+<ul>
+    <li>Artist: {{ album.artist }}</li>
+    <li>Genre: {{ album.get_genre_display }}</li>
+    <li>Publication date: {{ album.pub_date }}</li>
+    <li>My rating: {{ album.get_user_rating_display }}</li>
+    <li>Added: {{ album.add_date }}</li>
+</ul>
+
+<form action="{% url 'albumz:rate' album.id %}" method="post">
+    {% csrf_token %}
+    <label for="user_rating">Change your rating:</label>
+    <select name="user_rating" id="user_rating">
+        {% for value, label in rating_choices %}
+            <option value="{{ value }}" {% if album.user_rating == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+    </select>
+    <button type="submit">Save</button>
+</form>
