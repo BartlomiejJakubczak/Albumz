@@ -1,6 +1,6 @@
-{% if albums %}
+{% if latest_albums %}
     <ul>
-    {% for album in albums %}
+    {% for album in latest_albums %}
         <li><a href="{% url 'albumz:detail' album.id %}">{{ album.title }}</a></li>
     {% endfor %}
     </ul>

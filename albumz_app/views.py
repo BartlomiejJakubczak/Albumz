@@ -1,8 +1,9 @@
 from django.http import HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
+from django.views import generic
 
-from .models import Artist, Album
+from .domain.models import Artist, Album
 
 # Create your views here. (should be as easy as possible and call model and/or optional service layer logic)
 
@@ -10,18 +11,29 @@ from .models import Artist, Album
 # they don't care about anything else
 
 # present 5 albums that were added recently
-def index(request):
-    albums = Album.objects.order_by("-add_date")[:5] # resulting object is a QuerySet, which is iterable
-    return render(request, "albumz_app/index.html", {"albums": albums})
+class IndexView(generic.ListView):
+    template_name = "albumz_app/index.html"
+    context_object_name = "latest_albums"
 
-def detail(request, album_id):
-    album = get_object_or_404(Album, pk=album_id)
-    rating_choices = Album._meta.get_field('user_rating').choices
-    return render(request, "albumz_app/detail.html", {"album": album, "rating_choices": rating_choices})
+    # defined get_queryset / get_object or overriden model class attribute are the only ways to tell generic views on what
+    # model data they are operating
+    # the name of resulting data is defined in context_object_name
+    def get_queryset(self):
+        return Album.objects.order_by("-add_date")[:5] # resulting object is a QuerySet, which is iterable
 
-def results(request, artist_id):
-    artist = get_object_or_404(Artist, pk=artist_id)
-    return render(request, "albumz_app/results.html", {"artist": artist})
+class DetailView(generic.DetailView):
+    template_name = "albumz_app/detail.html"
+    model = Album
+
+    # this is the standard way to add variables to template context
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["rating_choices"] = Album._meta.get_field('user_rating').choices
+        return context
+
+class ResultsView(generic.DetailView):
+    template_name = "albumz_app/results.html"
+    model = Artist
 
 def rate(request, album_id):
     album = get_object_or_404(Album, pk=album_id)
