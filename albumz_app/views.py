@@ -10,7 +10,7 @@ from .domain.models import Artist, Album
 # Django views return an HttpResponse object containing the content for requested page, or raise an excepiton like Http404,
 # they don't care about anything else
 
-# present 5 albums that were added recently
+# present 5 latest added albums
 class IndexView(generic.ListView):
     template_name = "albumz_app/index.html"
     context_object_name = "latest_albums"

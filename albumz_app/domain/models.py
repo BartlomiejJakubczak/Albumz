@@ -2,6 +2,7 @@ import datetime
 
 from django.db import models
 from django.utils import timezone
+from django.contrib.auth.models import User as AuthUser
 
 from .exceptions import (
     AlbumAlreadyOnWishlistError,
@@ -24,10 +25,49 @@ class Rating(models.IntegerChoices):
     EXCELLENT = 5
     BEST = 6
 
+class User(models.Model):
+    # auth_user = models.OneToOneField(AuthUser, models.CASCADE, null=True)
+    
+    def add_to_collection(self, album):
+        if album not in self.albums.all():
+            album.user = self
+            album.owned = True
+            album.save()
+        else:
+            album_in_question = self.albums.get(title=album.title, artist=album.artist)
+            if album_in_question.is_owned():
+                raise AlbumAlreadyOwnedError
+            else:
+                album_in_question.owned = True
+                album_in_question.save()
+        
+    def remove_from_collection(self, pk):
+        try:
+            album = self.albums.get(pk=pk)
+            album.delete()
+        except Album.DoesNotExist:
+            raise AlbumDoesNotExistError
+        
+    def add_to_wishlist(self, album):
+        if album not in self.albums.all():
+            album.user = self
+            album.owned = False
+            album.save()
+        else:
+            album_in_question = self.albums.get(title=album.title, artist=album.artist)
+            raise AlbumAlreadyOwnedError if album_in_question.owned else AlbumAlreadyOnWishlistError
+    
+    def remove_from_wishlist(self, pk):
+        try:
+            album = self.albums.get(pk=pk)
+            album.delete()
+        except Album.DoesNotExist:
+            raise AlbumDoesNotExistError
+
 class Artist(models.Model):
     name = models.CharField(max_length=250)
-    country = models.CharField(max_length=100, null=True, blank=True) # blank = may be empty in form
-    formed_year = models.PositiveIntegerField(null=True, blank=True) # null = may be empty in database
+    country = models.CharField(max_length=100, null=True, blank=True)
+    formed_year = models.PositiveIntegerField(null=True, blank=True)
 
     def __str__(self):
         return self.name
@@ -48,6 +88,7 @@ class Album(models.Model):
     # The full SQL query would look like this:
     # SELECT album.* FROM album JOIN artist ON album.artist_id = artist.id
     # WHERE artist.country = 'Poland';
+    user = models.ForeignKey(User, models.CASCADE, related_name="albums") # excluded from form data
     pub_date = models.DateField("Date of publication.", null=True, blank=True)
     genre = models.CharField(
         max_length=30,
@@ -60,8 +101,7 @@ class Album(models.Model):
         default=0
     )
     add_date = models.DateField("Date of adding to the system.", auto_now_add=True)
-    # auto_now_add - sets the field to the current date/time only when the object is created.
-    # auto_now - sets the field to the current date/time every time the object is saved. (last modified for example)
+    owned = models.BooleanField("True if owned, False if on wishlist") # None as default
 
     def __str__(self):
         return f"{self.title} by {self.artist.name}"
@@ -69,54 +109,11 @@ class Album(models.Model):
     def __eq__(self, value) -> bool: # default behaviour is comparison by primary keys
         return self.title == value.title and self.artist.name == value.artist.name
     
-    def was_added_recently(self):
-        return self.add_date >= timezone.now() - datetime.timedelta(weeks=12) # this is possible due to __ge__ (greater-equal) and __sub__ of datetime
-
-# wishlists will only be instantiated when a new user is created
-class Wishlist(models.Model):
-    albums = models.ManyToManyField(Album, related_name="wishlists")
-
-    def add(self, album):
-        if album not in self.albums.all():
-            self.albums.add(album)
-        else:
-            raise AlbumAlreadyOnWishlistError
-        
-    def remove(self, album):
-        if album in self.albums.all():
-            self.albums.remove(album)
-        else:
-            raise AlbumDoesNotExistError
-        
-    def __iter__(self):
-        return iter(self.albums.all())
-
-class User(models.Model):
-    wishlist = models.OneToOneField(Wishlist, models.CASCADE)
-    albums = models.ManyToManyField(Album, related_name="users")
-
-    def save(self, *args, **kwargs) -> None:
-        if not self.pk:
-            wishlist = Wishlist.objects.create()
-            self.wishlist = wishlist
-        super().save(*args, **kwargs)
-
-    def add_to_collection(self, album):
-        if album not in self.albums.all():
-            self.albums.add(album)
-            if album in self.wishlist:
-                self.wishlist.remove(album)
-        else:
-            raise AlbumAlreadyOwnedError
-        
-    def remove_from_collection(self, album):
-        if album in self.albums.all():
-            self.albums.remove(album)
-        else:
-            raise AlbumDoesNotExistError
-        
-    def add_to_wishlist(self, album):
-        self.wishlist.add(album)
-
-    def remove_from_wishlist(self, album):
-        self.wishlist.remove(album)
+    def __hash__(self):
+        return hash(self.pk)
+    
+    def is_owned(self):
+        return self.owned == True
+    
+    def is_on_wishlist(self):
+        return self.owned == False

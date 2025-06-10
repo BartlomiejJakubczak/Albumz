@@ -1,188 +1,203 @@
 from django.test import TestCase
+from random import randint
 
-from ..domain.models import Wishlist, Album, Artist, User
+from ..domain.models import Album, Artist, User
 from ..domain.exceptions import (
     AlbumAlreadyOnWishlistError,
     AlbumAlreadyOwnedError,
     AlbumDoesNotExistError,
 )
 
-class TestWishlistModel(TestCase):
+class TestAlbumModel(TestCase):
     def setUp(self):
-        self.wishlist = Wishlist.objects.create()
         self.artist = Artist.objects.create(name="Megadeth", country="USA")
-        self.album = Album.objects.create(title="Rust In Peace", artist=self.artist)
-        
-    def test_add_when_album_not_in_wishlist(self):
-        # When
-        self.wishlist.add(self.album)
-        # Then
-        self.assertEqual(self.wishlist.albums.count(), 1)
-        self.assertIn(self.album, self.wishlist.albums.all())
 
-    def test_add_when_album_already_on_wishlist(self):
-        # When
-        self.wishlist.add(self.album)
-        self.assertEqual(self.wishlist.albums.count(), 1)
-        self.assertIn(self.album, self.wishlist.albums.all())
-        # Then
-        with self.assertRaises(AlbumAlreadyOnWishlistError):
-            self.wishlist.add(self.album)
-        self.assertEqual(self.wishlist.albums.count(), 1)
-        self.assertIn(self.album, self.wishlist.albums.all())
-
-    def test_remove_when_album_exists(self):
-        # Given
-        self.wishlist.add(self.album)
-        self.assertEqual(self.wishlist.albums.count(), 1)
-        self.assertIn(self.album, self.wishlist.albums.all())
-        # When
-        self.wishlist.remove(self.album)
-        # Then
-        self.assertFalse(self.wishlist.albums.contains(self.album))
-        self.assertEqual(self.wishlist.albums.count(), 0)
+    def album_from_form(self, title, owned):
+        return Album(
+            title=title, 
+            artist=self.artist, 
+            user=None,
+            owned=owned,
+        )
     
-    def test_remove_when_album_not_exists(self):
-        # Given
-        self.wishlist.add(self.album)
-        self.assertEqual(self.wishlist.albums.count(), 1)
-        self.assertIn(self.album, self.wishlist.albums.all())
-        album_not_on_wishlist = Album.objects.create(title="Youthanasia", artist=self.artist)
-        # When/Then
-        with self.assertRaises(AlbumDoesNotExistError):
-            self.wishlist.remove(album_not_on_wishlist)
-        self.assertEqual(self.wishlist.albums.count(), 1)
-        self.assertIn(self.album, self.wishlist.albums.all())
+    def test_album_on_wishlist(self):
+        album = self.album_from_form("Rust In Peace", False)
+        self.assertTrue(album.is_on_wishlist())
+        self.assertFalse(album.is_owned())
 
-class TestAlbumModel(TestCase): ...
+    def test_album_in_collection(self):
+        album = self.album_from_form("Rust In Peace", True)
+        self.assertTrue(album.is_owned())
+        self.assertFalse(album.is_on_wishlist())
 
 class TestUserModel(TestCase):
     def setUp(self):
         self.user = User.objects.create()
         self.artist = Artist.objects.create(name="Megadeth", country="USA")
-        self.album = Album.objects.create(title="Rust In Peace", artist=self.artist)
+
+    def album_from_form(self, title):
+        return Album(
+            title=title, 
+            artist=self.artist, 
+            user=None,
+            owned=None,
+        )
+    
+    def create_album_on_wishlist(self, title):
+        return Album.objects.create(
+            title=title, 
+            artist=self.artist, 
+            user=self.user,
+            owned=False,
+        )
+    
+    def create_album_in_collection(self, title):
+        return Album.objects.create(
+            title=title, 
+            artist=self.artist, 
+            user=self.user,
+            owned=True,
+        )
+
+    def get_albums_in_collection(self):
+        albums = self.user.albums.all() # uer.albums is the object manager
+        albums_in_collection = [album for album in filter(lambda album: album.owned == True, albums)]
+        return albums_in_collection
+    
+    def get_albums_on_wishlist(self):
+        albums = self.user.albums.all() # uer.albums is the object manager
+        albums_on_wishlist = [album for album in filter(lambda album: album.owned == False, albums)]
+        return albums_on_wishlist
 
     def test_new_user_has_an_empty_wishlist(self):
         # When/Then
-        self.assertTrue(self.user.wishlist)
+        self.assertEqual(len(self.get_albums_on_wishlist()), 0)
 
-    def test_add_to_collection_when_album_already_owned(self):
-        # Given
-        self.assertEqual(self.user.albums.count(), 0)
-        self.user.add_to_collection(self.album)
-        self.assertEqual(self.user.albums.count(), 1)
-        self.assertIn(self.album, self.user.albums.all())
+    def test_new_user_has_an_empty_collection(self):
         # When/Then
-        with self.assertRaises(AlbumAlreadyOwnedError):
-            self.user.add_to_collection(self.album)
-        self.assertEqual(self.user.albums.count(), 1)
-        self.assertIn(self.album, self.user.albums.all())
+        self.assertEqual(len(self.get_albums_in_collection()), 0)
 
-    def test_add_to_collection_when_album_not_owned(self):
+    def test_add_to_collection_when_album_already_in_collection(self):
         # Given
-        self.assertEqual(self.user.albums.count(), 0)
+        album_in_collection = self.create_album_in_collection("Rust In Peace")
+        self.assertEqual(len(self.get_albums_in_collection()), 1)
+        self.assertIn(album_in_collection, self.get_albums_in_collection())
+        album_from_form = self.album_from_form("Rust In Peace")
         # When
-        self.user.add_to_collection(self.album)
+        with self.assertRaises(AlbumAlreadyOwnedError):
+            self.user.add_to_collection(album_from_form)
         # Then
-        self.assertEqual(self.user.albums.count(), 1)
-        self.assertIn(self.album, self.user.albums.all())
+        self.assertEqual(len(self.get_albums_in_collection()), 1)
+        self.assertIn(album_in_collection, self.get_albums_in_collection())
+
+    def test_add_to_collection_when_album_not_in_collection(self):
+        # Given
+        album_from_form = self.album_from_form("Rust In Peace")
+        # When
+        self.user.add_to_collection(album_from_form)
+        # Then
+        self.assertEqual(len(self.get_albums_in_collection()), 1)
+        self.assertIn(album_from_form, self.get_albums_in_collection())
 
     def test_add_to_collection_when_album_on_wishlist(self):
         # Given
-        self.assertEqual(self.user.albums.count(), 0)
-        self.assertEqual(self.user.wishlist.albums.count(), 0)
-        self.user.wishlist.add(self.album)
-        self.assertEqual(self.user.wishlist.albums.count(), 1)
-        self.assertIn(self.album, self.user.wishlist.albums.all())
+        album_on_wishlist = self.create_album_on_wishlist("Rust In Peace")
+        self.assertEqual(len(self.get_albums_on_wishlist()), 1)
+        self.assertIn(album_on_wishlist, self.get_albums_on_wishlist())
+        album_from_form = self.album_from_form("Rust In Peace")
         # When
-        self.user.add_to_collection(self.album)
+        self.user.add_to_collection(album_from_form)
         # Then
-        self.assertEqual(self.user.wishlist.albums.count(), 0)
-        self.assertEqual(self.user.albums.count(), 1)
-        self.assertIn(self.album, self.user.albums.all())
-
-    def test_add_to_collection_when_album_not_on_wishlist(self):
-        # Given
-        self.assertEqual(self.user.albums.count(), 0)
-        self.assertEqual(self.user.wishlist.albums.count(), 0)
-        self.user.wishlist.add(self.album)
-        other_album = Album.objects.create(title="Youthanasia", artist=self.artist)
-        # When
-        self.user.add_to_collection(other_album)
-        # Then
-        self.assertEqual(self.user.albums.count(), 1)
-        self.assertIn(other_album, self.user.albums.all())
-        self.assertEqual(self.user.wishlist.albums.count(), 1)
-        self.assertIn(self.album, self.user.wishlist.albums.all())
+        self.assertEqual(len(self.get_albums_in_collection()), 1)
+        self.assertIn(album_from_form, self.get_albums_in_collection())
+        self.assertEqual(len(self.get_albums_on_wishlist()), 0)
+        self.assertNotIn(album_on_wishlist, self.get_albums_on_wishlist())
 
     def test_add_to_wishlist_when_not_on_wishlist(self):
         # Given
-        self.assertEqual(self.user.wishlist.albums.count(), 0)
+        album_from_form = self.album_from_form("Rust In Peace")
         # When
-        self.user.add_to_wishlist(self.album)
+        self.user.add_to_wishlist(album_from_form)
         # Then
-        self.assertEqual(self.user.wishlist.albums.count(), 1)
-        self.assertIn(self.album, self.user.wishlist.albums.all())
+        self.assertEqual(len(self.get_albums_on_wishlist()), 1)
+        self.assertIn(album_from_form, self.get_albums_on_wishlist())
 
     def test_add_to_wishlist_when_already_on_wishlist(self):
         # Given
-        self.assertEqual(self.user.wishlist.albums.count(), 0)
-        self.user.add_to_wishlist(self.album)
-        self.assertEqual(self.user.wishlist.albums.count(), 1)
-        self.assertIn(self.album, self.user.wishlist.albums.all())
+        album_on_wishlist = self.create_album_on_wishlist("Rust In Peace")
+        self.assertEqual(len(self.get_albums_on_wishlist()), 1)
+        self.assertIn(album_on_wishlist, self.get_albums_on_wishlist())
+        album_from_form = self.album_from_form("Rust In Peace")
         # When/Then
         with self.assertRaises(AlbumAlreadyOnWishlistError):
-            self.user.add_to_wishlist(self.album)
-        self.assertEqual(self.user.wishlist.albums.count(), 1)
-        self.assertIn(self.album, self.user.wishlist.albums.all())
+            self.user.add_to_wishlist(album_from_form)
+        self.assertEqual(len(self.get_albums_on_wishlist()), 1)
+        self.assertIn(album_on_wishlist, self.get_albums_on_wishlist())
 
-    def test_remove_from_collection_when_album_exists(self):
+    def test_add_to_wishlist_when_album_already_in_collection(self):
         # Given
-        self.assertEqual(self.user.albums.count(), 0)
-        self.user.add_to_collection(self.album)
-        self.assertEqual(self.user.albums.count(), 1)
-        self.assertIn(self.album, self.user.albums.all())
+        album_in_collection = self.create_album_in_collection("Rust In Peace")
+        self.assertEqual(len(self.get_albums_in_collection()), 1)
+        self.assertIn(album_in_collection, self.get_albums_in_collection())
+        album_from_form = self.album_from_form("Rust In Peace")
+        # When/Then
+        with self.assertRaises(AlbumAlreadyOwnedError):
+            self.user.add_to_wishlist(album_from_form)
+        self.assertEqual(len(self.get_albums_on_wishlist()), 0)
+        self.assertNotIn(album_from_form, self.get_albums_on_wishlist())
+
+    def test_remove_from_collection_when_album_already_in_collection(self):
+        # Given
+        album_in_collection = self.create_album_in_collection("Rust In Peace")
+        self.assertEqual(len(self.get_albums_in_collection()), 1)
+        self.assertIn(album_in_collection, self.get_albums_in_collection())
         # When
-        self.user.remove_from_collection(self.album)
+        self.user.remove_from_collection(album_in_collection.pk)
         # Then
-        self.assertEqual(self.user.albums.count(), 0)
-        self.assertNotIn(self.album, self.user.albums.all())
-
-    def test_remove_from_collection_when_album_not_exists(self):
+        self.assertEqual(len(self.get_albums_in_collection()), 0)
+        self.assertNotIn(album_in_collection, self.get_albums_in_collection())
+    
+    def test_remove_from_collection_when_album_not_in_collection(self):
         # Given
-        self.assertEqual(self.user.albums.count(), 0)
-        self.user.add_to_collection(self.album)
-        self.assertEqual(self.user.albums.count(), 1)
-        self.assertIn(self.album, self.user.albums.all())
-        other_album = Album.objects.create(title="Youthanasia", artist=self.artist)
-        self.assertNotIn(other_album, self.user.albums.all())
+        album_in_collection = self.create_album_in_collection("Rust In Peace")
+        self.assertEqual(len(self.get_albums_in_collection()), 1)
+        self.assertIn(album_in_collection, self.get_albums_in_collection())
         # When/Then
         with self.assertRaises(AlbumDoesNotExistError):
-            self.user.remove_from_collection(other_album)
-        self.assertEqual(self.user.albums.count(), 1)
-        self.assertIn(self.album, self.user.albums.all())
-        
-    def test_remove_from_wishlist_when_album_exists(self):
-        # Given
-        self.assertEqual(self.user.wishlist.albums.count(), 0)
-        self.user.add_to_wishlist(self.album)
-        self.assertEqual(self.user.wishlist.albums.count(), 1)
-        self.assertIn(self.album, self.user.wishlist.albums.all())
-        # When
-        self.user.remove_from_wishlist(self.album)
-        # Then
-        self.assertEqual(self.user.wishlist.albums.count(), 0)
-        self.assertNotIn(self.album, self.user.wishlist.albums.all())
+            self.user.remove_from_collection(album_in_collection.pk + 1)
+        self.assertEqual(len(self.get_albums_in_collection()), 1)
+        self.assertIn(album_in_collection, self.get_albums_in_collection())
 
-    def test_remove_from_wishlist_when_album_not_exists(self):
-        # Given
-        self.assertEqual(self.user.wishlist.albums.count(), 0)
-        self.user.add_to_wishlist(self.album)
-        self.assertEqual(self.user.wishlist.albums.count(), 1)
-        self.assertIn(self.album, self.user.wishlist.albums.all())
-        other_album = Album.objects.create(title="Youthanasia", artist=self.artist)
-        # When / Then
+    def test_remove_from_collection_when_album_not_in_collection_empty_collection(self):
+        # When/Then
         with self.assertRaises(AlbumDoesNotExistError):
-            self.user.remove_from_wishlist(other_album)
-        self.assertEqual(self.user.wishlist.albums.count(), 1)
-        self.assertIn(self.album, self.user.wishlist.albums.all())
+            self.user.remove_from_collection(randint(1,10))
+        self.assertEqual(len(self.get_albums_in_collection()), 0)
+  
+    def test_remove_from_wishlist_when_album_on_wishlist(self):
+        # Given
+        album_on_wishlist = self.create_album_on_wishlist("Rust In Peace")
+        self.assertEqual(len(self.get_albums_on_wishlist()), 1)
+        self.assertIn(album_on_wishlist, self.get_albums_on_wishlist())
+        # When
+        self.user.remove_from_wishlist(album_on_wishlist.pk)
+        # Then
+        self.assertEqual(len(self.get_albums_on_wishlist()), 0)
+        self.assertNotIn(album_on_wishlist, self.get_albums_on_wishlist())
+
+    def test_remove_from_wishlist_when_album_not_on_wishlist(self):
+        # Given
+        album_on_wishlist = self.create_album_on_wishlist("Rust In Peace")
+        self.assertEqual(len(self.get_albums_on_wishlist()), 1)
+        self.assertIn(album_on_wishlist, self.get_albums_on_wishlist())
+        # When/Then
+        with self.assertRaises(AlbumDoesNotExistError):
+            self.user.remove_from_wishlist(album_on_wishlist.pk + 1)
+        self.assertEqual(len(self.get_albums_on_wishlist()), 1)
+        self.assertIn(album_on_wishlist, self.get_albums_on_wishlist())
+
+    def test_remove_from_collection_when_album_not_in_wishlist_empty_wishlist(self):
+        # When/Then
+        with self.assertRaises(AlbumDoesNotExistError):
+            self.user.remove_from_wishlist(randint(1,10))
+        self.assertEqual(len(self.get_albums_on_wishlist()), 0)
