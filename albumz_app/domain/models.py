@@ -25,6 +25,9 @@ class Rating(models.IntegerChoices):
 class User(models.Model):
     auth_user = models.OneToOneField(AuthUser, models.CASCADE, related_name="albumz_user")
     
+    def __str__(self) -> str:
+        return f"{self.auth_user.username}"
+
     def add_to_collection(self, album):
         if album not in self.albums.all():
             album.user = self

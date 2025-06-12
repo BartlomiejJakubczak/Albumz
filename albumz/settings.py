@@ -103,6 +103,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 LOGIN_REDIRECT_URL = reverse_lazy("albumz:results")
+LOGOUT_REDIRECT_URL = reverse_lazy("accounts:login")
 LOGIN_URL = reverse_lazy("accounts:login")
 
 # Internationalization

@@ -1,10 +1,14 @@
-<h1>Albums by {{ artist }}</h1>
-{% if artist.albums.all %}
+<h1>Hello, {{ user.username }}, here are the albums in your collection!</h1>
+{% if albums_in_collection %}
     <ul>
-        {% for album in artist.albums.all %}
+        {% for album in albums_in_collection %}
             <li><a href="{% url 'albumz:detail' album.id %}">{{ album.title }}</a></li>
         {% endfor %}
     </ul>
 {% else %}
-    <p>No albums of that artist yet.</p>
+    <p>No albums in your collection yet.</p>
 {% endif %}
+<form method="post" action="{% url 'accounts:logout' %}">
+    {% csrf_token %}
+    <button type="submit">Logout</button>
+</form>
