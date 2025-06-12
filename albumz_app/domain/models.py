@@ -1,7 +1,4 @@
-import datetime
-
 from django.db import models
-from django.utils import timezone
 from django.contrib.auth.models import User as AuthUser
 
 from .exceptions import (
@@ -26,7 +23,7 @@ class Rating(models.IntegerChoices):
     BEST = 6
 
 class User(models.Model):
-    # auth_user = models.OneToOneField(AuthUser, models.CASCADE, null=True)
+    auth_user = models.OneToOneField(AuthUser, models.CASCADE, related_name="albumz_user")
     
     def add_to_collection(self, album):
         if album not in self.albums.all():
@@ -64,31 +61,10 @@ class User(models.Model):
         except Album.DoesNotExist:
             raise AlbumDoesNotExistError
 
-class Artist(models.Model):
-    name = models.CharField(max_length=250)
-    country = models.CharField(max_length=100, null=True, blank=True)
-    formed_year = models.PositiveIntegerField(null=True, blank=True)
-
-    def __str__(self):
-        return self.name
-
 class Album(models.Model):
-    title = models.CharField(max_length=250)
-    artist = models.ForeignKey(Artist, models.CASCADE, related_name="albums") # many-to-one, related_name names relation from the related 
-    # object back to this one, a reverse relationship, so artist.albums.all() works
-
-    # example Django's ORM call:
-
-    # Album.objects.filter(artist__country="Poland") (note: there's a hidden __exact field lookup here, so artist__country__exact would be the full explicit call)
-    # which translates to:
-    # SELECT * FROM album WHERE artist.country = 'Poland';
-
-    # Django automatically handles the join between Album and Artist for you.
-
-    # The full SQL query would look like this:
-    # SELECT album.* FROM album JOIN artist ON album.artist_id = artist.id
-    # WHERE artist.country = 'Poland';
     user = models.ForeignKey(User, models.CASCADE, related_name="albums") # excluded from form data
+    title = models.CharField(max_length=250)
+    artist = models.CharField(max_length=100)
     pub_date = models.DateField("Date of publication.", null=True, blank=True)
     genre = models.CharField(
         max_length=30,
@@ -104,13 +80,15 @@ class Album(models.Model):
     owned = models.BooleanField("True if owned, False if on wishlist") # None as default
 
     def __str__(self):
-        return f"{self.title} by {self.artist.name}"
+        return f"{self.title} by {self.artist}"
     
     def __eq__(self, value) -> bool: # default behaviour is comparison by primary keys
-        return self.title == value.title and self.artist.name == value.artist.name
+        if not isinstance(value, Album):
+            return False
+        return self.title == value.title and self.artist == value.artist
     
     def __hash__(self):
-        return hash(self.pk)
+        return hash(self.title + self.artist)
     
     def is_owned(self):
         return self.owned == True

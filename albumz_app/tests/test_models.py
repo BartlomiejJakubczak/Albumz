@@ -1,7 +1,8 @@
 from django.test import TestCase
+from django.contrib.auth.models import User as AuthUser
 from random import randint
 
-from ..domain.models import Album, Artist, User
+from ..domain.models import Album
 from ..domain.exceptions import (
     AlbumAlreadyOnWishlistError,
     AlbumAlreadyOwnedError,
@@ -9,13 +10,10 @@ from ..domain.exceptions import (
 )
 
 class TestAlbumModel(TestCase):
-    def setUp(self):
-        self.artist = Artist.objects.create(name="Megadeth", country="USA")
-
     def album_from_form(self, title, owned):
         return Album(
             title=title, 
-            artist=self.artist, 
+            artist="Megadeth", 
             user=None,
             owned=owned,
         )
@@ -32,13 +30,13 @@ class TestAlbumModel(TestCase):
 
 class TestUserModel(TestCase):
     def setUp(self):
-        self.user = User.objects.create()
-        self.artist = Artist.objects.create(name="Megadeth", country="USA")
+        auth_user = AuthUser.objects.create_user("testuser")
+        self.user = auth_user.albumz_user
 
     def album_from_form(self, title):
         return Album(
             title=title, 
-            artist=self.artist, 
+            artist="Megadeth", 
             user=None,
             owned=None,
         )
@@ -46,7 +44,7 @@ class TestUserModel(TestCase):
     def create_album_on_wishlist(self, title):
         return Album.objects.create(
             title=title, 
-            artist=self.artist, 
+            artist="Megadeth", 
             user=self.user,
             owned=False,
         )
@@ -54,19 +52,19 @@ class TestUserModel(TestCase):
     def create_album_in_collection(self, title):
         return Album.objects.create(
             title=title, 
-            artist=self.artist, 
+            artist="Megadeth", 
             user=self.user,
             owned=True,
         )
 
     def get_albums_in_collection(self):
         albums = self.user.albums.all() # uer.albums is the object manager
-        albums_in_collection = [album for album in filter(lambda album: album.owned == True, albums)]
+        albums_in_collection = set(album for album in filter(lambda album: album.owned == True, albums))
         return albums_in_collection
     
     def get_albums_on_wishlist(self):
         albums = self.user.albums.all() # uer.albums is the object manager
-        albums_on_wishlist = [album for album in filter(lambda album: album.owned == False, albums)]
+        albums_on_wishlist = set(album for album in filter(lambda album: album.owned == False, albums))
         return albums_on_wishlist
 
     def test_new_user_has_an_empty_wishlist(self):
