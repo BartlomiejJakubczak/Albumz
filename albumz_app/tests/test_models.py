@@ -199,3 +199,22 @@ class TestUserModel(TestCase):
         with self.assertRaises(AlbumDoesNotExistError):
             self.user.remove_from_wishlist(randint(1,10))
         self.assertEqual(len(self.get_albums_on_wishlist()), 0)
+
+    def test_get_collection_when_album_in_collection(self):
+        # Given
+        album_in_collection = self.create_album_in_collection("Rust In Peace")
+        album_on_wishlist_1 = self.create_album_on_wishlist("Youthansia")
+        album_on_wishlist_2 = self.create_album_on_wishlist("Countdown To Extinction")
+        # When
+        albums = self.user.get_collection()
+        # Then
+        self.assertSetEqual(albums, {album_in_collection})
+
+    def test_get_collection_when_no_albums_in_collection(self):
+        # Given
+        album_on_wishlist_1 = self.create_album_on_wishlist("Youthansia")
+        album_on_wishlist_2 = self.create_album_on_wishlist("Countdown To Extinction")
+        # When
+        albums = self.user.get_collection()
+        # Then
+        self.assertSetEqual(albums, set())

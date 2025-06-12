@@ -44,6 +44,10 @@ class User(models.Model):
             album.delete()
         except Album.DoesNotExist:
             raise AlbumDoesNotExistError
+
+    def get_collection(self):
+        albums = self.albums.all()
+        return set(album for album in filter(lambda album: album.owned == True, albums))
         
     def add_to_wishlist(self, album):
         if album not in self.albums.all():
