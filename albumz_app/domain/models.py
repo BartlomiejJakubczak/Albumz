@@ -35,7 +35,7 @@ class User(models.Model):
             album.save()
         else:
             album_in_question = self.albums.get(title=album.title, artist=album.artist)
-            if album_in_question.is_owned():
+            if album_in_question.is_in_collection():
                 raise AlbumAlreadyOwnedError
             else:
                 album_in_question.owned = True
@@ -97,7 +97,7 @@ class Album(models.Model):
     def __hash__(self):
         return hash(self.title + self.artist)
     
-    def is_owned(self):
+    def is_in_collection(self):
         return self.owned == True
     
     def is_on_wishlist(self):

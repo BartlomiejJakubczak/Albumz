@@ -21,11 +21,11 @@ class TestAlbumModel(TestCase):
     def test_album_on_wishlist(self):
         album = self.album_from_form("Rust In Peace", False)
         self.assertTrue(album.is_on_wishlist())
-        self.assertFalse(album.is_owned())
+        self.assertFalse(album.is_in_collection())
 
     def test_album_in_collection(self):
         album = self.album_from_form("Rust In Peace", True)
-        self.assertTrue(album.is_owned())
+        self.assertTrue(album.is_in_collection())
         self.assertFalse(album.is_on_wishlist())
 
 class TestUserModel(TestCase):

@@ -21,6 +21,5 @@ class ResultsView(LoginRequiredMixin, generic.ListView):
     context_object_name = "albums_in_collection"
 
     def get_queryset(self):
-        print("User authenticated:", self.request.user.is_authenticated)
         auth_user = self.request.user
         return auth_user.albumz_user.get_collection()
