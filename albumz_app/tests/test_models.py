@@ -10,49 +10,70 @@ from ..domain.exceptions import (
 )
 
 class TestAlbumModel(TestCase):
-    def album_from_form(self, title, owned):
+    def album_from_form(self, title, artist, owned=None):
         return Album(
             title=title, 
-            artist="Megadeth", 
+            artist=artist, 
             user=None,
             owned=owned,
         )
     
     def test_album_on_wishlist(self):
-        album = self.album_from_form("Rust In Peace", False)
+        album = self.album_from_form("Rust In Peace", "Megadeth", False)
         self.assertTrue(album.is_on_wishlist())
         self.assertFalse(album.is_in_collection())
 
     def test_album_in_collection(self):
-        album = self.album_from_form("Rust In Peace", True)
+        album = self.album_from_form("Rust In Peace", "Megadeth", True)
         self.assertTrue(album.is_in_collection())
         self.assertFalse(album.is_on_wishlist())
 
-class TestUserModel(TestCase):
-    def setUp(self):
-        auth_user = AuthUser.objects.create_user("testuser")
-        self.user = auth_user.albumz_user
+    def test_album_equal_to_another_album(self):
+        title = "Rust In Peace"
+        artist = "Megadeth"
+        self.assertEqual(
+            self.album_from_form(title, artist),
+            self.album_from_form(title, artist),
+        )
 
-    def album_from_form(self, title):
+    def test_album_not_equal_to_another_album(self):
+        title = "Rust In Peace"
+        artist = "Megadeth"
+        self.assertNotEqual(
+            self.album_from_form(title, artist),
+            self.album_from_form(title, "Metallica"),
+        )
+        self.assertNotEqual(
+            self.album_from_form(title, artist),
+            self.album_from_form("Kill 'Em All", artist),
+        )
+    
+class TestUserModel(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        auth_user = AuthUser.objects.create_user("testuser")
+        cls.user = auth_user.albumz_user
+
+    def album_from_form(self, title, artist="Megadeth"):
         return Album(
             title=title, 
-            artist="Megadeth", 
+            artist=artist, 
             user=None,
             owned=None,
         )
     
-    def create_album_on_wishlist(self, title):
+    def create_album_on_wishlist(self, title, artist="Megadeth"):
         return Album.objects.create(
             title=title, 
-            artist="Megadeth", 
+            artist=artist, 
             user=self.user,
             owned=False,
         )
     
-    def create_album_in_collection(self, title):
+    def create_album_in_collection(self, title, artist="Megadeth"):
         return Album.objects.create(
             title=title, 
-            artist="Megadeth", 
+            artist=artist, 
             user=self.user,
             owned=True,
         )
