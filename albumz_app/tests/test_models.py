@@ -239,3 +239,33 @@ class TestUserModel(TestCase):
         albums = self.user.get_collection()
         # Then
         self.assertSetEqual(albums, set())
+
+    def test_get_album_when_album_in_collection(self):
+        # Given
+        album_in_collection = self.create_album_in_collection("Rust In Peace")
+        # When
+        album_from_collection = self.user.get_album(album_in_collection.pk)
+        # Then
+        self.assertEqual(album_in_collection.pk, album_from_collection.pk)
+
+    def test_get_album_when_album_not_in_collection(self):
+        # Given
+        album_in_collection = self.create_album_in_collection("Rust In Peace")
+        # When/Then
+        with self.assertRaises(AlbumDoesNotExistError):
+            self.user.get_album(album_in_collection.pk + randint(1, 10))
+
+    def test_get_album_when_album_on_wishlist(self):
+        # Given
+        album_on_wishlist = self.create_album_on_wishlist("Rust In Peace")
+        # When
+        album_from_wishlist = self.user.get_album(album_on_wishlist.pk)
+        # Then
+        self.assertEqual(album_from_wishlist.pk, album_from_wishlist.pk)
+
+    def test_get_album_when_album_not_on_wishlist(self):
+        # Given
+        album_on_wishlist = self.create_album_on_wishlist("Rust In Peace")
+        # When/Then
+        with self.assertRaises(AlbumDoesNotExistError):
+            self.user.get_album(album_on_wishlist.pk + randint(1, 10))

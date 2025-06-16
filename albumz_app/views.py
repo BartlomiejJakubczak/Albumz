@@ -15,6 +15,11 @@ class DetailView(LoginRequiredMixin, generic.DetailView):
     template_name = "albumz_app/detail.html"
     model = Album
 
+    def get_object(self):
+        auth_user = self.request.user
+        domain_user = auth_user.albumz_user
+        return domain_user.get_album(self.kwargs['pk'])
+
 @method_decorator(never_cache, name="dispatch")
 class ResultsView(LoginRequiredMixin, generic.ListView):
     template_name = "albumz_app/results.html"
@@ -22,4 +27,5 @@ class ResultsView(LoginRequiredMixin, generic.ListView):
 
     def get_queryset(self):
         auth_user = self.request.user
-        return auth_user.albumz_user.get_collection()
+        domain_user = auth_user.albumz_user
+        return domain_user.albums.filter(owned=True)
