@@ -49,8 +49,7 @@ class User(models.Model):
             raise AlbumDoesNotExistError
 
     def get_collection(self):
-        albums = self.albums.all()
-        return set(album for album in filter(lambda album: album.owned == True, albums))
+        return set(self.albums.filter(owned=True))
     
     def get_album(self, pk):
         try:

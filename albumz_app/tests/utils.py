@@ -6,7 +6,7 @@ from ..domain.models import Album
 class AlbumTestHelpers:
     def create_albums(self, owned, count=randint(1, 10), user=None):
         def create_random_string():
-            return str((''.join(choice(ascii_letters)) for _ in range(randint(1, 10))))
+            return ''.join(choice(ascii_letters) for _ in range(randint(1, 10)))
         
         if user is None:
             if not hasattr(self, "domain_user"):
