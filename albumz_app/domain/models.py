@@ -101,7 +101,7 @@ class Album(models.Model):
         return self.title == value.title and self.artist == value.artist
     
     def __hash__(self):
-        return hash(self.title + self.artist)
+        return hash((self.title, self.artist))
     
     def is_in_collection(self):
         return self.owned == True

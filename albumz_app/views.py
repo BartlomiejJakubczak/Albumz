@@ -1,10 +1,12 @@
 from django.views import generic
 from django.views.decorators.cache import never_cache
 from django.utils.decorators import method_decorator
+from django.http import Http404
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 
 from .domain.models import Album
+from .domain.exceptions import AlbumDoesNotExistError
 
 # Create your views here. (should be as easy as possible and call model and/or optional service layer logic)
 
@@ -18,7 +20,10 @@ class DetailView(LoginRequiredMixin, generic.DetailView):
     def get_object(self):
         auth_user = self.request.user
         domain_user = auth_user.albumz_user
-        return domain_user.get_album(self.kwargs['pk'])
+        try:
+            return domain_user.get_album(self.kwargs['pk']) 
+        except AlbumDoesNotExistError:
+            raise Http404("Album not found in collection.")
 
 @method_decorator(never_cache, name="dispatch")
 class ResultsView(LoginRequiredMixin, generic.ListView):
