@@ -1,3 +1,6 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'albumz_app/style.css' %}">
+
 <h1>Hello, {{ user.username }}, here are the albums in your collection!</h1>
 {% if albums_in_collection %}
     <ul>
