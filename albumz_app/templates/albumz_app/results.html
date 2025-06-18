@@ -1,17 +1,27 @@
+{% extends "base.html" %}
 {% load static %}
-<link rel="stylesheet" href="{% static 'albumz_app/style.css' %}">
 
-<h1>Hello, {{ user.username }}, here are the albums in your collection!</h1>
-{% if albums_in_collection %}
-    <ul>
-        {% for album in albums_in_collection %}
-            <li><a href="{% url 'albumz:detail' album.id %}">{{ album.title }}</a></li>
-        {% endfor %}
-    </ul>
-{% else %}
-    <p>No albums in your collection yet.</p>
-{% endif %}
-<form method="post" action="{% url 'accounts:logout' %}">
-    {% csrf_token %}
-    <button type="submit">Logout</button>
-</form>
+
+{% block navbar_brand %}
+    <a class="navbar-brand" href="{% url 'albumz:results' %}">Navbar</a>
+{% endblock %}
+
+{% block navbar_actions %}
+    {% include "registration/includes/logout_form.html" %}
+{% endblock navbar_actions %}
+
+{% block title %}
+    <h1>Hello, {{ user.username }}, here are the albums in your collection!</h1>
+{% endblock title %}
+
+{% block content %}
+    {% if albums_in_collection %}
+        <ul>
+            {% for album in albums_in_collection %}
+                <li><a href="{% url 'albumz:detail' album.id %}">{{ album.title }}</a></li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No albums in your collection yet.</p>
+    {% endif %}
+{% endblock content %}

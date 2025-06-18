@@ -1,11 +1,24 @@
+{% extends "base.html" %}
 {% load static %}
-<link rel="stylesheet" href="{% static 'albumz_app/style.css' %}">
 
-<h1>{{ album.title }}</h1>
-<ul>
-    <li>Artist: {{ album.artist }}</li>
-    <li>Genre: {{ album.get_genre_display }}</li>
-    <li>Publication date: {{ album.pub_date }}</li>
-    <li>My rating: {{ album.get_user_rating_display }}</li>
-    <li>Added: {{ album.add_date }}</li>
-</ul>
+{% block navbar_brand %}
+    <a class="navbar-brand" href="{% url 'albumz:results' %}">Navbar</a>
+{% endblock %}
+
+{% block navbar_actions %}
+    {% include "registration/includes/logout_form.html" %}
+{% endblock navbar_actions %}
+
+{% block title %}
+    <h1>{{ album.title }}</h1>
+{% endblock title %}
+
+{% block content %}
+    <ul>
+        <li>Artist: {{ album.artist }}</li>
+        <li>Genre: {{ album.get_genre_display }}</li>
+        <li>Publication date: {{ album.pub_date }}</li>
+        <li>My rating: {{ album.get_user_rating_display }}</li>
+        <li>Added: {{ album.add_date }}</li>
+    </ul>
+{% endblock content %}
