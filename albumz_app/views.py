@@ -29,7 +29,7 @@ class DetailView(LoginRequiredMixin, generic.DetailView):
 
 @method_decorator(never_cache, name="dispatch")
 class ResultsView(LoginRequiredMixin, generic.ListView):
-    template_name = "albumz_app/results.html"
+    template_name = "albumz_app/collection.html"
     context_object_name = "albums_in_collection"
 
     def get_queryset(self):

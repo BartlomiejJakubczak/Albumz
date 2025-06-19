@@ -8,7 +8,7 @@ from .utils import AlbumTestHelpers
 from ..urls import app_name
 
 
-class TestResultsView(AlbumTestHelpers, TestCase):
+class TestCollectionView(AlbumTestHelpers, TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.password = "testuser"
@@ -18,15 +18,15 @@ class TestResultsView(AlbumTestHelpers, TestCase):
         cls.domain_user = cls.user.albumz_user
 
     def test_results_view_requires_login(self):
-        response = self.client.get(reverse(f"{app_name}:results"))
-        self.assertRedirects(response, f"/accounts/login/?next=/{app_name}/results/")
+        response = self.client.get(reverse(f"{app_name}:collection"))
+        self.assertRedirects(response, f"/accounts/login/?next=/{app_name}/collection/")
 
     def test_results_view_no_albums_in_collection(self):
         # Given
         self.client.login(username=self.user.username, password=self.password)
         # need to put in plain text for password, because self.user.password will access the hashed password from database
         # When
-        response = self.client.get(reverse(f"{app_name}:results"))
+        response = self.client.get(reverse(f"{app_name}:collection"))
         # Then
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "No albums in your collection yet.")
@@ -37,7 +37,7 @@ class TestResultsView(AlbumTestHelpers, TestCase):
         self.client.login(username=self.user.username, password=self.password)
         albums_in_collection = self.create_albums(owned=True)
         # When
-        response = self.client.get(reverse(f"{app_name}:results"))
+        response = self.client.get(reverse(f"{app_name}:collection"))
         # Then
         self.assertEqual(response.status_code, 200)
         self.assertSetEqual(
