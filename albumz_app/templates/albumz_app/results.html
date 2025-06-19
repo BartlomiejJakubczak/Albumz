@@ -1,9 +1,12 @@
 {% extends "base.html" %}
 {% load static %}
 
+{% block extra_head_css %}
+    <link rel="stylesheet" href="{% static 'albumz_app/styles.css' %}">
+{% endblock extra_head_css %}
 
 {% block navbar_brand %}
-    <a class="navbar-brand" href="{% url 'albumz:results' %}">Navbar</a>
+    {% include "albumz_app/includes/navbar_brand.html" %}
 {% endblock %}
 
 {% block navbar_actions %}
@@ -11,16 +14,31 @@
 {% endblock navbar_actions %}
 
 {% block title %}
-    <h1>Hello, {{ user.username }}, here are the albums in your collection!</h1>
+    <h1 class="page-title">Hello, {{ user.username }}, here are the albums in your collection!</h1>
 {% endblock title %}
 
 {% block content %}
     {% if albums_in_collection %}
-        <ul>
-            {% for album in albums_in_collection %}
-                <li><a href="{% url 'albumz:detail' album.id %}">{{ album.title }}</a></li>
-            {% endfor %}
-        </ul>
+        <div class="centered-table-container">
+            <table class="table table-hover my-table">
+                <thead class="thead-dark">
+                    <th scope="col">Title</th>
+                    <th scope="col">Artist</th>
+                    <th scope="col">Add date</th>
+                    <th scope="col">My rating</th>
+                    <th scope="col"></th>
+                </thead>
+                {% for album in albums_in_collection %}
+                    <tbody>
+                        <td>{{ album.title }}</td> 
+                        <td>{{ album.artist }}</td> 
+                        <td>{{ album.add_date }}</td> 
+                        <td>{{ album.get_user_rating_display }}</td>
+                        <td><a href="{% url 'albumz:detail' album.id %}">See details</a></td> 
+                    </tbody>
+                {% endfor %}
+            </table>
+        </div>
     {% else %}
         <p>No albums in your collection yet.</p>
     {% endif %}
