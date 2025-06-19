@@ -6,26 +6,7 @@
 
 {% block content %}
     {% if albums_on_wishlist %}
-        <div class="centered-table-container">
-            <table class="table table-hover my-table">
-                <thead class="thead-dark">
-                    <th scope="col">Title</th>
-                    <th scope="col">Artist</th>
-                    <th scope="col">Add date</th>
-                    <th scope="col">My rating</th>
-                    <th scope="col"></th>
-                </thead>
-                {% for album in albums_on_wishlist %}
-                    <tbody>
-                        <td>{{ album.title }}</td> 
-                        <td>{{ album.artist }}</td> 
-                        <td>{{ album.add_date }}</td> 
-                        <td>{{ album.get_user_rating_display }}</td>
-                        <td><a href="{% url 'albumz:detail' album.id %}">See details</a></td> 
-                    </tbody>
-                {% endfor %}
-            </table>
-        </div>
+        {% include "albumz_app/includes/albumz_table.html" with albums=albums_on_wishlist %}
     {% else %}
         <p>No albums on your wishlist yet.</p>
     {% endif %}
