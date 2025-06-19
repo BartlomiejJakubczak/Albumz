@@ -13,6 +13,7 @@ from .domain.exceptions import AlbumDoesNotExistError
 # Django views return an HttpResponse object containing the content for requested page, or raise an excepiton like Http404,
 # they don't care about anything else
 
+
 class DetailView(LoginRequiredMixin, generic.DetailView):
     template_name = "albumz_app/detail.html"
     model = Album
@@ -21,9 +22,10 @@ class DetailView(LoginRequiredMixin, generic.DetailView):
         auth_user = self.request.user
         domain_user = auth_user.albumz_user
         try:
-            return domain_user.get_album(self.kwargs['pk']) 
+            return domain_user.get_album(self.kwargs["pk"])
         except AlbumDoesNotExistError:
             raise Http404("Album not found in collection.")
+
 
 @method_decorator(never_cache, name="dispatch")
 class ResultsView(LoginRequiredMixin, generic.ListView):
@@ -34,7 +36,8 @@ class ResultsView(LoginRequiredMixin, generic.ListView):
         auth_user = self.request.user
         domain_user = auth_user.albumz_user
         return domain_user.albums.filter(owned=True)
-    
+
+
 class WishlistView(LoginRequiredMixin, generic.ListView):
     template_name = "albumz_app/wishlist.html"
     context_object_name = "albums_on_wishlist"

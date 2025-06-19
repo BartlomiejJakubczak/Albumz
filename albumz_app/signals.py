@@ -3,6 +3,7 @@ from django.dispatch import receiver
 from django.contrib.auth.models import User as AuthUser
 from .domain.models import User as DomainUser
 
+
 @receiver(post_save, sender=AuthUser)
 def create_domain_user(sender, instance, created, **kwargs):
     if created:

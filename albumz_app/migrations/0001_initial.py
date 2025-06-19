@@ -15,24 +15,96 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='User',
+            name="User",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('auth_user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='albumz_user', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "auth_user",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="albumz_user",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='Album',
+            name="Album",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('title', models.CharField(max_length=250)),
-                ('artist', models.CharField(max_length=100)),
-                ('pub_date', models.DateField(blank=True, null=True, verbose_name='Date of publication.')),
-                ('genre', models.CharField(choices=[('ROCK', 'Rock'), ('POP', 'Pop'), ('JAZZ', 'Jazz'), ('HIPHOP', 'Hip-Hop'), ('OTHER', 'Other')], default='OTHER', max_length=30)),
-                ('user_rating', models.IntegerField(choices=[(1, 'Terrible'), (2, 'Bad'), (3, 'Average'), (4, 'Good'), (5, 'Excellent'), (6, 'Best')], default=0, verbose_name='Rating given by the owner of the album.')),
-                ('add_date', models.DateField(auto_now_add=True, verbose_name='Date of adding to the system.')),
-                ('owned', models.BooleanField(verbose_name='True if owned, False if on wishlist')),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='albums', to='albumz_app.user')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("title", models.CharField(max_length=250)),
+                ("artist", models.CharField(max_length=100)),
+                (
+                    "pub_date",
+                    models.DateField(
+                        blank=True, null=True, verbose_name="Date of publication."
+                    ),
+                ),
+                (
+                    "genre",
+                    models.CharField(
+                        choices=[
+                            ("ROCK", "Rock"),
+                            ("POP", "Pop"),
+                            ("JAZZ", "Jazz"),
+                            ("HIPHOP", "Hip-Hop"),
+                            ("OTHER", "Other"),
+                        ],
+                        default="OTHER",
+                        max_length=30,
+                    ),
+                ),
+                (
+                    "user_rating",
+                    models.IntegerField(
+                        choices=[
+                            (1, "Terrible"),
+                            (2, "Bad"),
+                            (3, "Average"),
+                            (4, "Good"),
+                            (5, "Excellent"),
+                            (6, "Best"),
+                        ],
+                        default=0,
+                        verbose_name="Rating given by the owner of the album.",
+                    ),
+                ),
+                (
+                    "add_date",
+                    models.DateField(
+                        auto_now_add=True, verbose_name="Date of adding to the system."
+                    ),
+                ),
+                (
+                    "owned",
+                    models.BooleanField(
+                        verbose_name="True if owned, False if on wishlist"
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="albums",
+                        to="albumz_app.user",
+                    ),
+                ),
             ],
         ),
     ]
