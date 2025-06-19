@@ -1,11 +1,11 @@
 {% extends "albumz_app/base_albumz.html" %}
 
 {% block title %}
-    <h1 class="page-title">Hello, {{ user.username }}, here are the albums in your collection!</h1>
+    <h1 class="page-title">Hello, {{ user.username }}, here are the albums on your wishlist!</h1>
 {% endblock title %}
 
 {% block content %}
-    {% if albums_in_collection %}
+    {% if albums_on_wishlist %}
         <div class="centered-table-container">
             <table class="table table-hover my-table">
                 <thead class="thead-dark">
@@ -15,7 +15,7 @@
                     <th scope="col">My rating</th>
                     <th scope="col"></th>
                 </thead>
-                {% for album in albums_in_collection %}
+                {% for album in albums_on_wishlist %}
                     <tbody>
                         <td>{{ album.title }}</td> 
                         <td>{{ album.artist }}</td> 
@@ -27,6 +27,6 @@
             </table>
         </div>
     {% else %}
-        <p>No albums in your collection yet.</p>
+        <p>No albums on your wishlist yet.</p>
     {% endif %}
 {% endblock content %}

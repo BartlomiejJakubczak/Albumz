@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_head_css %}
+    <link rel="stylesheet" href="{% static 'albumz_app/styles.css' %}">
+{% endblock extra_head_css %}
+
+{% block navbar_brand %}
+    {% include "albumz_app/includes/navbar_brand.html" %}
+{% endblock %}
+
+{% block navbar_actions %}
+  <a class="nav-link" href="{% url 'albumz:results' %}">My Collection</a>
+  <a class="nav-link" href="{% url 'albumz:wishlist' %}">Wishlist</a>
+  {% include "registration/includes/logout_form.html" %}
+{% endblock %}

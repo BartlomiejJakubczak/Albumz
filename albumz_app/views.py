@@ -34,3 +34,12 @@ class ResultsView(LoginRequiredMixin, generic.ListView):
         auth_user = self.request.user
         domain_user = auth_user.albumz_user
         return domain_user.albums.filter(owned=True)
+    
+class WishlistView(LoginRequiredMixin, generic.ListView):
+    template_name = "albumz_app/wishlist.html"
+    context_object_name = "albums_on_wishlist"
+
+    def get_queryset(self):
+        auth_user = self.request.user
+        domain_user = auth_user.albumz_user
+        return domain_user.albums.filter(owned=False)

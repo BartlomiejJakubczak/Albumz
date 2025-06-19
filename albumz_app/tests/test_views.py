@@ -96,3 +96,36 @@ class TestDetailView(AlbumTestHelpers, TestCase):
         # Then
         self.assertEqual(response.status_code, 404)
 
+class TestWishlistView(AlbumTestHelpers, TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.password = "testuser"
+        cls.user = AuthUser.objects.create_user(username="testuser", password=cls.password)
+        cls.domain_user = cls.user.albumz_user
+
+    def test_wishlist_view_requires_login(self):
+        response = self.client.get(reverse(f"{app_name}:wishlist"))
+        self.assertRedirects(response, f'/accounts/login/?next=/{app_name}/wishlist/')
+
+    def test_results_view_no_albums_on_wishlist(self):
+        # Given
+        self.client.login(username=self.user.username, password=self.password)
+        # When
+        response = self.client.get(reverse(f"{app_name}:wishlist"))
+        # Then
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "No albums on your wishlist yet.")
+        self.assertQuerySetEqual(response.context["albums_on_wishlist"], set())
+
+    def test_results_view_when_albums_on_wishlist(self):
+        # Given
+        self.client.login(username=self.user.username, password=self.password)
+        albums_on_wishlist = self.create_albums(owned=False)
+        # When
+        response = self.client.get(reverse(f"{app_name}:wishlist"))
+        # Then
+        self.assertEqual(response.status_code, 200)
+        self.assertSetEqual(
+            set(response.context["albums_on_wishlist"]),
+            set(albums_on_wishlist)
+        )
