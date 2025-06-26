@@ -14,3 +14,11 @@
   <a class="nav-link" href="{% url 'albumz:wishlist' %}">Wishlist</a>
   {% include "registration/includes/logout_form.html" %}
 {% endblock %}
+
+{% block footer %}
+  <footer class="footer">
+    <div class="footer-content">
+      {% block footer-content %}{% endblock footer-content %}
+    </div>
+  </footer>
+{% endblock footer %}

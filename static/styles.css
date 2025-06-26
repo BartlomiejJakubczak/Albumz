@@ -20,55 +20,6 @@ h1.page-title {
     border-bottom: 1px solid #eee;
 }
 
-/* Container that fills the space below navbar + title */
-.centered-table-container {
-    display: flex;
-    justify-content: center;
-    padding: 10px 40px;
-    padding-bottom: 60px;
-    height: calc(100vh - 140px - 80px); /* Adjust to account for navbar + title and footer*/
-    box-sizing: border-box;
-}
-
-/* The wrapper holds both the thead table and the scrollable tbody */
-.table-wrapper {
-    width: 100%;
-    max-width: 1000px;
-    display: flex;
-    flex-direction: column;
-    border: 1px solid #ccc;
-    overflow: hidden;
-}
-
-/* Fixed header table */
-.table-wrapper > table {
-    table-layout: fixed;
-    width: 100%;
-    border-collapse: collapse;
-}
-
-/* Scrollable tbody container */
-.scrollable-tbody {
-    flex-grow: 1;
-    overflow-y: auto;
-}
-
-/* Body table (rows) */
-.scrollable-tbody table {
-    table-layout: fixed;
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.my-table.table {
-    margin-bottom: 0;           /* Removes bottom margin from Bootstrap */
-    border-collapse: collapse;  /* Ensures no spacing between cells */
-}
-
-.my-table tr {
-    height: auto; /* Remove Bootstrap row height if any */
-}
-
 .footer {
     text-align: center;
     padding: 20px;
