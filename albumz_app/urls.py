@@ -9,7 +9,7 @@ urlpatterns = [
     # ex: /albumz/collection/
     path("collection/", views.ResultsView.as_view(), name="collection"),
     # ex: /albumz/collection/create
-    path("collection/create/", views.create_album_collection, name="create_collection"),
+    path("collection/add/", views.add_album_collection, name="add_collection"),
     # ex: /albumz/wishlist/
     path("wishlist/", views.WishlistView.as_view(), name="wishlist"),
 ]

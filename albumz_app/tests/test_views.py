@@ -152,7 +152,7 @@ class TestWishlistView(AlbumTestHelpers, TestCase):
         )
 
 
-class TestCreateAlbumCollectionView(TestCase):
+class TestAddAlbumCollectionView(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.password = "testuser"
@@ -161,17 +161,17 @@ class TestCreateAlbumCollectionView(TestCase):
         )
         cls.domain_user = cls.user.albumz_user
 
-    def test_create_album_collection_view_requires_login(self):
-        response = self.client.get(reverse(f"{app_name}:create_collection"))
+    def test_add_album_collection_view_requires_login(self):
+        response = self.client.get(reverse(f"{app_name}:add_collection"))
         self.assertRedirects(
-            response, f"/accounts/login/?next=/{app_name}/collection/create/"
+            response, f"/accounts/login/?next=/{app_name}/collection/add/"
         )
 
-    def test_create_album_collection_get_empty_form(self):
+    def test_add_album_collection_get_empty_form(self):
         # Given
         self.client.login(username=self.user.username, password=self.password)
         # When
-        response = self.client.get(reverse(f"{app_name}:create_collection"))
+        response = self.client.get(reverse(f"{app_name}:add_collection"))
         # Then
         self.assertEqual(response.status_code, 200)
         form = response.context["form"]
@@ -179,7 +179,7 @@ class TestCreateAlbumCollectionView(TestCase):
         self.assertFalse(form.is_bound)
         self.assertSetEqual(set(form.errors), set())
 
-    def test_create_album_collection_successful_creation(self):
+    def test_add_album_collection_successful_creation(self):
         # Given
         self.client.login(username=self.user.username, password=self.password)
         form_data = {
@@ -191,7 +191,7 @@ class TestCreateAlbumCollectionView(TestCase):
         }
         # When
         response = self.client.post(
-            reverse(f"{app_name}:create_collection"), form_data, follow=True
+            reverse(f"{app_name}:add_collection"), form_data, follow=True
         )
         # Then
         self.assertEqual(response.status_code, 200)
@@ -199,7 +199,7 @@ class TestCreateAlbumCollectionView(TestCase):
         self.assertContains(response, "Rust In Peace")
         self.assertTrue(Album.objects.filter(title="Rust In Peace").exists())
 
-    def test_create_album_collection_validation_errors_pub_date(self):
+    def test_add_album_collection_validation_errors_pub_date(self):
         # Given
         self.client.login(username=self.user.username, password=self.password)
         form_data = {
@@ -210,7 +210,7 @@ class TestCreateAlbumCollectionView(TestCase):
             "user_rating": "6",
         }
         # When
-        response = self.client.post(reverse(f"{app_name}:create_collection"), form_data)
+        response = self.client.post(reverse(f"{app_name}:add_collection"), form_data)
         # Then
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "albumz_app/forms/album_collection_form.html")
@@ -224,7 +224,7 @@ class TestCreateAlbumCollectionView(TestCase):
         self.assertEqual(form.data["user_rating"], "6")
         self.assertEqual(form.data["pub_date"], future_date().isoformat())
 
-    def test_create_album_collection_album_already_in_collection(self):
+    def test_add_album_collection_album_already_in_collection(self):
         # Given
         self.client.login(username=self.user.username, password=self.password)
         album_in_collection = Album.objects.create(
@@ -238,7 +238,7 @@ class TestCreateAlbumCollectionView(TestCase):
             "user_rating": "6",
         }
         # When
-        response = self.client.post(reverse(f"{app_name}:create_collection"), form_data)
+        response = self.client.post(reverse(f"{app_name}:add_collection"), form_data)
         # Then
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "albumz_app/forms/album_collection_form.html")

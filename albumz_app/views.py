@@ -53,7 +53,7 @@ class WishlistView(LoginRequiredMixin, generic.ListView):
 
 
 @login_required
-def create_album_collection(request):
+def add_album_collection(request):
     if request.method == "GET":
         return render(
             request,
