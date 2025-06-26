@@ -1,7 +1,7 @@
 from django.test import TestCase
 
 from .utils import present_date, future_date
-from ..forms.album_forms import AlbumCollectionForm
+from ..forms.album_forms import AlbumCollectionForm, AlbumWishlistForm
 
 
 class TestAlbumCollectionForm(TestCase):
@@ -57,6 +57,63 @@ class TestAlbumCollectionForm(TestCase):
         }
         # When
         form = AlbumCollectionForm(form_data)
+        # Then
+        self.assertFalse(form.is_valid())
+        self.assertIn("pub_date", form.errors)
+        self.assertIn(
+            "Publication date cannot be in the future.", form.errors["pub_date"]
+        )
+
+
+class TestAlbumWishlistForm(TestCase):
+    def test_valid_form_complete_data(self):
+        # Given
+        form_data = {
+            "title": "Rust In Peace",
+            "artist": "Megadeth",
+            "pub_date": "1990-09-24",
+            "genre": "ROCK",
+        }
+        # When
+        form = AlbumWishlistForm(form_data)
+        # Then
+        self.assertTrue(form.is_valid())
+
+    def test_valid_form_incomplete_data(self):
+        # Given
+        form_data = {
+            "title": "Rust In Peace",
+            "artist": "Megadeth",
+            "genre": "ROCK",
+        }
+        # When
+        form = AlbumWishlistForm(form_data)
+        # Then
+        self.assertTrue(form.is_valid())
+
+    def test_valid_form_pub_date_now(self):
+        # Given
+        form_data = {
+            "title": "Rust In Peace",
+            "artist": "Megadeth",
+            "pub_date": present_date(),
+            "genre": "ROCK",
+        }
+        # When
+        form = AlbumWishlistForm(form_data)
+        # Then
+        self.assertTrue(form.is_valid())
+
+    def test_invalid_form_pub_date_future(self):
+        # Given
+        form_data = {
+            "title": "Rust In Peace",
+            "artist": "Megadeth",
+            "pub_date": future_date(),
+            "genre": "ROCK",
+        }
+        # When
+        form = AlbumWishlistForm(form_data)
         # Then
         self.assertFalse(form.is_valid())
         self.assertIn("pub_date", form.errors)
