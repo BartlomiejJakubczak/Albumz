@@ -3,6 +3,7 @@ from django.test import TestCase
 from .utils import present_date, future_date
 from ..forms.album_forms import AlbumCollectionForm
 
+
 class TestAlbumCollectionForm(TestCase):
     def test_valid_form_complete_data(self):
         # Given
@@ -11,7 +12,7 @@ class TestAlbumCollectionForm(TestCase):
             "artist": "Megadeth",
             "pub_date": "1990-09-24",
             "genre": "ROCK",
-            "user_rating": "6"
+            "user_rating": "6",
         }
         # When
         form = AlbumCollectionForm(form_data)
@@ -24,7 +25,7 @@ class TestAlbumCollectionForm(TestCase):
             "title": "Rust In Peace",
             "artist": "Megadeth",
             "genre": "ROCK",
-            "user_rating": "6"
+            "user_rating": "6",
         }
         # When
         form = AlbumCollectionForm(form_data)
@@ -38,7 +39,7 @@ class TestAlbumCollectionForm(TestCase):
             "artist": "Megadeth",
             "pub_date": present_date(),
             "genre": "ROCK",
-            "user_rating": "6"
+            "user_rating": "6",
         }
         # When
         form = AlbumCollectionForm(form_data)
@@ -52,11 +53,13 @@ class TestAlbumCollectionForm(TestCase):
             "artist": "Megadeth",
             "pub_date": future_date(),
             "genre": "ROCK",
-            "user_rating": "6"
+            "user_rating": "6",
         }
         # When
         form = AlbumCollectionForm(form_data)
         # Then
         self.assertFalse(form.is_valid())
         self.assertIn("pub_date", form.errors)
-        self.assertIn("Publication date cannot be in the future.", form.errors["pub_date"])
+        self.assertIn(
+            "Publication date cannot be in the future.", form.errors["pub_date"]
+        )

@@ -70,7 +70,7 @@ class TestAlbumModel(TestCase):
     def test_album_invalid_pub_date_future(self):
         album = self.album_instance("Rust In Peace", "Megadeth")
         album.pub_date = future_date()
-        self.assertFalse(album.is_pub_date_valid())    
+        self.assertFalse(album.is_pub_date_valid())
 
 
 class TestUserModel(AlbumTestHelpers, TestCase):

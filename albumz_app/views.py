@@ -50,15 +50,15 @@ class WishlistView(LoginRequiredMixin, generic.ListView):
         auth_user = self.request.user
         domain_user = auth_user.albumz_user
         return domain_user.albums.filter(owned=False)
-    
+
 
 @login_required
 def create_album_collection(request):
     if request.method == "GET":
         return render(
-            request, 
-            "albumz_app/forms/album_collection_form.html", 
-            {"form": AlbumCollectionForm()}
+            request,
+            "albumz_app/forms/album_collection_form.html",
+            {"form": AlbumCollectionForm()},
         )
     else:
         # POST
@@ -73,12 +73,10 @@ def create_album_collection(request):
                 return render(
                     request,
                     "albumz_app/forms/album_collection_form.html",
-                    {"form": form}
+                    {"form": form},
                 )
             else:
                 return HttpResponseRedirect(reverse("albumz:collection"))
         return render(
-            request,
-            "albumz_app/forms/album_collection_form.html",
-            {"form": form}
+            request, "albumz_app/forms/album_collection_form.html", {"form": form}
         )

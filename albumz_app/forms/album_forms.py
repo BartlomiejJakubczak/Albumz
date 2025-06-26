@@ -16,7 +16,7 @@ class AlbumCollectionForm(forms.ModelForm):
         else:
             if pub_date > timezone.now().date():
                 raise forms.ValidationError(
-                    "Publication date cannot be in the future.", 
+                    "Publication date cannot be in the future.",
                 )
             return pub_date
 

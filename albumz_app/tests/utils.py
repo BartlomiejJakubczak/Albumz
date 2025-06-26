@@ -26,9 +26,11 @@ class AlbumTestHelpers:
                 )
             )
         return albums_in_collection
-    
+
+
 def future_date():
     return timezone.now().date() + timedelta(days=1)
+
 
 def present_date():
     return timezone.now().date()

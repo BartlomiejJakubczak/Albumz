@@ -86,9 +86,7 @@ class User(models.Model):
 
 
 class Album(models.Model):
-    user = models.ForeignKey(
-        User, models.CASCADE, related_name="albums"
-    )
+    user = models.ForeignKey(User, models.CASCADE, related_name="albums")
     title = models.CharField(max_length=250)
     artist = models.CharField(max_length=100)
     pub_date = models.DateField("Date of publication.", null=True, blank=True)
@@ -111,17 +109,19 @@ class Album(models.Model):
 
     def __hash__(self):
         return hash((self.title, self.artist))
-    
+
     def clean(self):
         super().clean()
         if not self.is_pub_date_valid():
-            raise ValidationError({'pub_date': "Publication date cannot be in the future."})
+            raise ValidationError(
+                {"pub_date": "Publication date cannot be in the future."}
+            )
 
     def is_in_collection(self):
         return self.owned == True
 
     def is_on_wishlist(self):
         return self.owned == False
-    
+
     def is_pub_date_valid(self):
         return self.pub_date is None or self.pub_date <= timezone.now().date()

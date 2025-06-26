@@ -163,7 +163,9 @@ class TestCreateAlbumCollectionView(TestCase):
 
     def test_create_album_collection_view_requires_login(self):
         response = self.client.get(reverse(f"{app_name}:create_collection"))
-        self.assertRedirects(response, f"/accounts/login/?next=/{app_name}/collection/create/")
+        self.assertRedirects(
+            response, f"/accounts/login/?next=/{app_name}/collection/create/"
+        )
 
     def test_create_album_collection_get_empty_form(self):
         # Given
@@ -185,10 +187,12 @@ class TestCreateAlbumCollectionView(TestCase):
             "artist": "Megadeth",
             "pub_date": "1990-09-24",
             "genre": "ROCK",
-            "user_rating": "6"
+            "user_rating": "6",
         }
         # When
-        response = self.client.post(reverse(f"{app_name}:create_collection"), form_data, follow=True)
+        response = self.client.post(
+            reverse(f"{app_name}:create_collection"), form_data, follow=True
+        )
         # Then
         self.assertEqual(response.status_code, 200)
         self.assertRedirects(response, reverse(f"{app_name}:collection"))
@@ -203,7 +207,7 @@ class TestCreateAlbumCollectionView(TestCase):
             "artist": "Megadeth",
             "pub_date": future_date(),
             "genre": "ROCK",
-            "user_rating": "6"
+            "user_rating": "6",
         }
         # When
         response = self.client.post(reverse(f"{app_name}:create_collection"), form_data)
@@ -224,17 +228,14 @@ class TestCreateAlbumCollectionView(TestCase):
         # Given
         self.client.login(username=self.user.username, password=self.password)
         album_in_collection = Album.objects.create(
-            title="Rust In Peace",
-            artist="Megadeth",
-            user=self.domain_user,
-            owned=True
+            title="Rust In Peace", artist="Megadeth", user=self.domain_user, owned=True
         )
         form_data = {
             "title": album_in_collection.title,
             "artist": album_in_collection.artist,
             "pub_date": present_date(),
             "genre": "ROCK",
-            "user_rating": "6"
+            "user_rating": "6",
         }
         # When
         response = self.client.post(reverse(f"{app_name}:create_collection"), form_data)
@@ -250,4 +251,3 @@ class TestCreateAlbumCollectionView(TestCase):
         self.assertEqual(form.data["genre"], "ROCK")
         self.assertEqual(form.data["user_rating"], "6")
         self.assertEqual(form.data["pub_date"], present_date().isoformat())
-
