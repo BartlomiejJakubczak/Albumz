@@ -46,6 +46,7 @@ class User(models.Model):
                 raise AlbumAlreadyOwnedError
             else:
                 album_in_question.owned = True
+                album_in_question.user_rating = album.user_rating
                 album_in_question.save()
 
     def remove_from_collection(self, pk):
@@ -92,7 +93,7 @@ class Album(models.Model):
     pub_date = models.DateField("Date of publication.", null=True, blank=True)
     genre = models.CharField(max_length=30, choices=Genre.choices, default=Genre.OTHER)
     user_rating = models.IntegerField(
-        "Rating given by the owner of the album.", choices=Rating.choices, default=0
+        "Rating given by the owner of the album.", choices=Rating.choices, null=True, blank=False, default=None
     )
     add_date = models.DateField("Date of adding to the system.", auto_now_add=True)
     owned = models.BooleanField(

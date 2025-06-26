@@ -6,7 +6,7 @@
 
 {% block content %}
     {% if albums_in_collection %}
-        {% include "albumz_app/includes/albumz_table.html" with albums=albums_in_collection %}
+        {% include "albumz_app/includes/albumz_collection_table.html" with albums=albums_in_collection %}
     {% else %}
         <p>No albums in your collection yet.</p>
     {% endif %}

@@ -6,8 +6,12 @@
 
 {% block content %}
     {% if albums_on_wishlist %}
-        {% include "albumz_app/includes/albumz_table.html" with albums=albums_on_wishlist %}
+        {% include "albumz_app/includes/albumz_wishlist_table.html" with albums=albums_on_wishlist %}
     {% else %}
         <p>No albums on your wishlist yet.</p>
     {% endif %}
 {% endblock content %}
+
+{% block footer-content %}
+    <a href="{% url 'albumz:add_wishlist' %}">Add Album</a>
+{% endblock footer-content %}

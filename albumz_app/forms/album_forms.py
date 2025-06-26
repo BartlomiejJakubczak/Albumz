@@ -25,3 +25,14 @@ class AlbumWishlistForm(forms.ModelForm):
     class Meta:
         model = Album
         fields = ["title", "artist", "pub_date", "genre"]
+
+    def clean_pub_date(self):
+        pub_date = self.cleaned_data["pub_date"]
+        if pub_date is None:
+            return pub_date
+        else:
+            if pub_date > timezone.now().date():
+                raise forms.ValidationError(
+                    "Publication date cannot be in the future.",
+                )
+            return pub_date

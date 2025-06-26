@@ -1,0 +1,28 @@
+<div class="centered-table-container">
+    <div class="table-wrapper">
+        <table class="table table-hover my-table">
+            <thead class="thead-dark">
+                <tr>
+                    <th>Title</th>
+                    <th>Artist</th>
+                    <th>Add date</th>
+                    <th></th>
+                </tr>
+            </thead>
+        </table>
+        <div class="scrollable-tbody">
+            <table class="table table-hover my-table">
+                <tbody>
+                    {% for album in albums %}
+                        <tr>
+                            <td>{{ album.title }}</td>
+                            <td>{{ album.artist }}</td>
+                            <td>{{ album.add_date }}</td>
+                            <td><a href="{% url 'albumz:detail' album.id %}">See details</a></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

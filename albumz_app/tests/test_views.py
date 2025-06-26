@@ -6,7 +6,7 @@ from random import choice
 
 from .utils import AlbumTestHelpers, future_date, present_date
 from ..urls import app_name
-from ..forms.album_forms import AlbumCollectionForm
+from ..forms.album_forms import AlbumCollectionForm, AlbumWishlistForm
 from ..domain.models import Album
 
 
@@ -197,7 +197,7 @@ class TestAddAlbumCollectionView(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertRedirects(response, reverse(f"{app_name}:collection"))
         self.assertContains(response, "Rust In Peace")
-        self.assertTrue(Album.objects.filter(title="Rust In Peace").exists())
+        self.assertTrue(Album.objects.filter(title="Rust In Peace", owned=True).exists())
 
     def test_add_album_collection_validation_errors_pub_date(self):
         # Given
@@ -250,4 +250,126 @@ class TestAddAlbumCollectionView(TestCase):
         self.assertEqual(form.data["artist"], "Megadeth")
         self.assertEqual(form.data["genre"], "ROCK")
         self.assertEqual(form.data["user_rating"], "6")
+        self.assertEqual(form.data["pub_date"], present_date().isoformat())
+
+
+class TestAddAlbumWishlistview(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.password = "testuser"
+        cls.user = AuthUser.objects.create_user(
+            username="testuser", password=cls.password
+        )
+        cls.domain_user = cls.user.albumz_user
+
+    def test_add_album_wishlist_view_requires_login(self):
+        response = self.client.get(reverse(f"{app_name}:add_wishlist"))
+        self.assertRedirects(
+            response, f"/accounts/login/?next=/{app_name}/wishlist/add/"
+        )
+
+    def test_add_album_wishlist_get_empty_form(self):
+        # Given
+        self.client.login(username=self.user.username, password=self.password)
+        # When
+        response = self.client.get(reverse(f"{app_name}:add_wishlist"))
+        # Then
+        self.assertEqual(response.status_code, 200)
+        form = response.context["form"]
+        self.assertIsInstance(form, AlbumWishlistForm)
+        self.assertFalse(form.is_bound)
+        self.assertSetEqual(set(form.errors), set())
+
+    def test_add_album_wishlist_successful_creation(self):
+        # Given
+        self.client.login(username=self.user.username, password=self.password)
+        form_data = {
+            "title": "Rust In Peace",
+            "artist": "Megadeth",
+            "pub_date": "1990-09-24",
+            "genre": "ROCK",
+        }
+        # When
+        response = self.client.post(
+            reverse(f"{app_name}:add_wishlist"), form_data, follow=True
+        )
+        # Then
+        self.assertEqual(response.status_code, 200)
+        self.assertRedirects(response, reverse(f"{app_name}:wishlist"))
+        self.assertContains(response, "Rust In Peace")
+        self.assertTrue(Album.objects.filter(title="Rust In Peace", owned=False).exists())
+
+    def test_add_album_wishlist_validation_errors_pub_date(self):
+        # Given
+        self.client.login(username=self.user.username, password=self.password)
+        form_data = {
+            "title": "Rust In Peace",
+            "artist": "Megadeth",
+            "pub_date": future_date(),
+            "genre": "ROCK",
+        }
+        # When
+        response = self.client.post(reverse(f"{app_name}:add_wishlist"), form_data)
+        # Then
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "albumz_app/forms/album_wishlist_form.html")
+        form = response.context["form"]
+        errors = form.errors.get("pub_date", [])
+        self.assertIn("Publication date cannot be in the future.", errors)
+        self.assertTrue(form.is_bound)
+        self.assertEqual(form.data["title"], "Rust In Peace")
+        self.assertEqual(form.data["artist"], "Megadeth")
+        self.assertEqual(form.data["genre"], "ROCK")
+        self.assertEqual(form.data["pub_date"], future_date().isoformat())
+
+    def test_add_album_wishlist_album_already_on_wishlist(self):
+        # Given
+        self.client.login(username=self.user.username, password=self.password)
+        album_on_wishlist = Album.objects.create(
+            title="Rust In Peace", artist="Megadeth", user=self.domain_user, owned=False
+        )
+        form_data = {
+            "title": album_on_wishlist.title,
+            "artist": album_on_wishlist.artist,
+            "pub_date": present_date(),
+            "genre": "ROCK",
+        }
+        # When
+        response = self.client.post(reverse(f"{app_name}:add_wishlist"), form_data)
+        # Then
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "albumz_app/forms/album_wishlist_form.html")
+        form = response.context["form"]
+        errors = form.non_field_errors()
+        self.assertIn("You already have this album on wishlist!", errors)
+        self.assertTrue(form.is_bound)
+        self.assertEqual(form.data["title"], "Rust In Peace")
+        self.assertEqual(form.data["artist"], "Megadeth")
+        self.assertEqual(form.data["genre"], "ROCK")
+        self.assertEqual(form.data["pub_date"], present_date().isoformat())
+
+    def test_add_album_wishlist_album_already_in_collection(self):
+        # Given
+        self.client.login(username=self.user.username, password=self.password)
+        album_in_collection = Album.objects.create(
+            title="Rust In Peace", artist="Megadeth", user=self.domain_user, owned=True
+        )
+        form_data = {
+            "title": album_in_collection.title,
+            "artist": album_in_collection.artist,
+            "pub_date": present_date(),
+            "genre": "ROCK",
+        }
+        # When
+        response = self.client.post(reverse(f"{app_name}:add_wishlist"), form_data)
+        # Then
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "albumz_app/forms/album_wishlist_form.html")
+        form = response.context["form"]
+        errors = form.non_field_errors()
+        self.assertIn("You already own this album!", errors)
+        self.assertTrue(form.is_bound)
+        self.assertEqual(form.data["title"], "Rust In Peace")
+        self.assertEqual(form.data["artist"], "Megadeth")
+        self.assertEqual(form.data["genre"], "ROCK")
         self.assertEqual(form.data["pub_date"], present_date().isoformat())

@@ -10,7 +10,11 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 
 from .forms.album_forms import AlbumCollectionForm, AlbumWishlistForm
 from .domain.models import Album
-from .domain.exceptions import AlbumDoesNotExistError, AlbumAlreadyOwnedError
+from .domain.exceptions import (
+    AlbumDoesNotExistError, 
+    AlbumAlreadyOwnedError, 
+    AlbumAlreadyOnWishlistError,
+)
 
 # Create your views here. (should be as easy as possible and call model and/or optional service layer logic)
 
@@ -79,4 +83,41 @@ def add_album_collection(request):
                 return HttpResponseRedirect(reverse("albumz:collection"))
         return render(
             request, "albumz_app/forms/album_collection_form.html", {"form": form}
+        )
+
+
+@login_required
+def add_album_wishlist(request):
+    if request.method == "GET":
+        return render(
+            request,
+            "albumz_app/forms/album_wishlist_form.html",
+            {"form": AlbumWishlistForm()},
+        )
+    else:
+        # POST
+        domain_user = request.user.albumz_user
+        form = AlbumWishlistForm(request.POST)
+        if form.is_valid():
+            album = form.save(commit=False)
+            try:
+                domain_user.add_to_wishlist(album)
+            except AlbumAlreadyOwnedError:
+                form.add_error(None, "You already own this album!")
+                return render(
+                    request,
+                    "albumz_app/forms/album_wishlist_form.html",
+                    {"form": form},
+                )
+            except AlbumAlreadyOnWishlistError:
+                form.add_error(None, "You already have this album on wishlist!")
+                return render(
+                    request,
+                    "albumz_app/forms/album_wishlist_form.html",
+                    {"form": form},
+                )
+            else:
+                return HttpResponseRedirect(reverse("albumz:wishlist"))
+        return render(
+            request, "albumz_app/forms/album_wishlist_form.html", {"form": form}
         )

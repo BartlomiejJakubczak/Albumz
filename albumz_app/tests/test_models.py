@@ -4,7 +4,7 @@ from django.contrib.auth.models import User as AuthUser
 from random import randint, choice
 from datetime import date
 
-from .utils import AlbumTestHelpers, future_date, present_date
+from .utils import AlbumTestHelpers, future_date, present_date, get_random_user_rating
 from ..domain.models import Album
 from ..domain.exceptions import (
     AlbumAlreadyOnWishlistError,
@@ -79,10 +79,20 @@ class TestUserModel(AlbumTestHelpers, TestCase):
         auth_user = AuthUser.objects.create_user("testuser")
         cls.domain_user = auth_user.albumz_user
 
-    def album_from_form(self, title, artist):
+    def album_from_wishlist_form(self, title, artist):
         return Album(
             title=title,
             artist=artist,
+            user_rating=None,
+            user=None,
+            owned=None,
+        )
+    
+    def album_from_collection_form(self, title, artist):
+        return Album(
+            title=title,
+            artist=artist,
+            user_rating=get_random_user_rating(),
             user=None,
             owned=None,
         )
@@ -132,7 +142,7 @@ class TestUserModel(AlbumTestHelpers, TestCase):
         # Given
         albums_in_collection = self.create_albums(owned=True)
         album_already_in_collection = choice(albums_in_collection)
-        album_from_form = self.album_from_form(
+        album_from_form = self.album_from_collection_form(
             album_already_in_collection.title, album_already_in_collection.artist
         )
         # When
@@ -150,7 +160,7 @@ class TestUserModel(AlbumTestHelpers, TestCase):
         # Given
         albums_in_collection = self.create_albums(owned=True)
         albums_on_wishlist = self.create_albums(owned=False)
-        album_from_form = self.album_from_form(
+        album_from_form = self.album_from_collection_form(
             "DefinitelyNotInCollection", "DefinitelyNotInCollectionArtist"
         )
         # When
@@ -166,7 +176,7 @@ class TestUserModel(AlbumTestHelpers, TestCase):
         # Given
         albums_on_wishlist = self.create_albums(owned=False)
         album_on_wishlist = choice(albums_on_wishlist)
-        album_from_form = self.album_from_form(
+        album_from_form = self.album_from_collection_form(
             album_on_wishlist.title, album_on_wishlist.artist
         )
         # When
@@ -179,10 +189,30 @@ class TestUserModel(AlbumTestHelpers, TestCase):
         )
         self.assertNotIn(album_on_wishlist, self.get_albums_on_wishlist())
 
-    def test_add_to_wishlist_when_not_on_wishlist(self):
+    def test_add_to_collection_when_album_on_wishlist_updated_user_rating(self):
         # Given
         albums_on_wishlist = self.create_albums(owned=False)
-        album_from_form = self.album_from_form(
+        album_on_wishlist = choice(albums_on_wishlist)
+        self.assertIsNone(album_on_wishlist.user_rating)
+        album_from_form = self.album_from_collection_form(
+            album_on_wishlist.title, album_on_wishlist.artist
+        )
+        # When
+        self.domain_user.add_to_collection(album_from_form)
+        # Then
+        self.assertEqual(len(self.get_albums_in_collection()), 1)
+        self.assertIn(album_from_form, self.get_albums_in_collection())
+        self.assertEqual(
+            len(self.get_albums_on_wishlist()), len(albums_on_wishlist) - 1
+        )
+        self.assertNotIn(album_on_wishlist, self.get_albums_on_wishlist())
+        added_album = Album.objects.get(title=album_from_form.title, artist=album_from_form.artist, owned = True)
+        self.assertIsNotNone(added_album.user_rating)
+
+    def test_add_to_wishlist_when_album_not_on_wishlist(self):
+        # Given
+        albums_on_wishlist = self.create_albums(owned=False)
+        album_from_form = self.album_from_wishlist_form(
             "DefinitelyNotInCollection", "DefinitelyNotInCollectionArtist"
         )
         # When
@@ -193,11 +223,11 @@ class TestUserModel(AlbumTestHelpers, TestCase):
         )
         self.assertIn(album_from_form, self.get_albums_on_wishlist())
 
-    def test_add_to_wishlist_when_already_on_wishlist(self):
+    def test_add_to_wishlist_when_album_already_on_wishlist(self):
         # Given
         albums_on_wishlist = self.create_albums(owned=False)
         album_on_wishlist = choice(albums_on_wishlist)
-        album_from_form = self.album_from_form(
+        album_from_form = self.album_from_wishlist_form(
             album_on_wishlist.title, album_on_wishlist.artist
         )
         # When/Then
@@ -211,7 +241,7 @@ class TestUserModel(AlbumTestHelpers, TestCase):
         albums_on_wishlist = self.create_albums(owned=False)
         albums_in_collection = self.create_albums(owned=True)
         album_in_collection = choice(albums_in_collection)
-        album_from_form = self.album_from_form(
+        album_from_form = self.album_from_wishlist_form(
             album_in_collection.title, album_in_collection.artist
         )
         # When/Then

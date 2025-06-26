@@ -3,7 +3,7 @@ from random import choice, randint
 from django.utils import timezone
 from datetime import timedelta
 
-from ..domain.models import Album
+from ..domain.models import Album, Rating
 
 
 class AlbumTestHelpers:
@@ -23,9 +23,14 @@ class AlbumTestHelpers:
                     artist=create_random_string(),
                     user=user,
                     owned=owned,
+                    user_rating = get_random_user_rating() if owned else None,
                 )
             )
         return albums_in_collection
+    
+
+def get_random_user_rating():
+    return choice(Rating.choices)[0]
 
 
 def future_date():
