@@ -1,5 +1,5 @@
 html, body {
-    height: 100%;
+    height: 100vh;
     margin: 0;
     padding: 0;
     overflow: hidden; /* prevent full page scroll */
@@ -26,7 +26,7 @@ h1.page-title {
     justify-content: center;
     padding: 10px 40px;
     padding-bottom: 60px;
-    height: calc(100vh - 140px); /* Adjust to account for navbar + title */
+    height: calc(100vh - 140px - 80px); /* Adjust to account for navbar + title and footer*/
     box-sizing: border-box;
 }
 
@@ -67,4 +67,30 @@ h1.page-title {
 
 .my-table tr {
     height: auto; /* Remove Bootstrap row height if any */
+}
+
+.footer {
+    text-align: center;
+    padding: 20px;
+    background-color: #f8f9fa;
+    flex-shrink: 0;
+    display: flex;
+    align-items: flex-start; /* Align children to the top */
+    justify-content: center;
+    height: auto; /* Or whatever fixed height you need */
+}
+
+.footer-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center; /* Optional: center the button horizontally */
+    padding: 0;
+    margin: 0;
+    height: 100%;
+}
+
+.footer-content a {
+    margin: 0;
+    padding: 0;
 }

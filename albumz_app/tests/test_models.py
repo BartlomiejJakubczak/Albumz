@@ -1,8 +1,10 @@
 from django.test import TestCase
 from django.contrib.auth.models import User as AuthUser
-from random import randint, choice
 
-from .utils import AlbumTestHelpers
+from random import randint, choice
+from datetime import date
+
+from .utils import AlbumTestHelpers, future_date, present_date
 from ..domain.models import Album
 from ..domain.exceptions import (
     AlbumAlreadyOnWishlistError,
@@ -49,6 +51,26 @@ class TestAlbumModel(TestCase):
             self.album_instance(title, artist),
             self.album_instance("Kill 'Em All", artist),
         )
+
+    def test_album_valid_pub_date_past(self):
+        album = self.album_instance("Rust In Peace", "Megadeth")
+        album.pub_date = date(1991, 9, 21)
+        self.assertTrue(album.is_pub_date_valid())
+
+    def test_album_valid_pub_date_now(self):
+        album = self.album_instance("Rust In Peace", "Megadeth")
+        album.pub_date = present_date()
+        self.assertTrue(album.is_pub_date_valid())
+
+    def test_album_valid_pub_date_none(self):
+        album = self.album_instance("Rust In Peace", "Megadeth")
+        album.pub_date = None
+        self.assertTrue(album.is_pub_date_valid())
+
+    def test_album_invalid_pub_date_future(self):
+        album = self.album_instance("Rust In Peace", "Megadeth")
+        album.pub_date = future_date()
+        self.assertFalse(album.is_pub_date_valid())    
 
 
 class TestUserModel(AlbumTestHelpers, TestCase):

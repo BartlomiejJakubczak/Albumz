@@ -1,12 +1,16 @@
+from django.shortcuts import render
 from django.views import generic
 from django.views.decorators.cache import never_cache
 from django.utils.decorators import method_decorator
-from django.http import Http404
+from django.contrib.auth.decorators import login_required
+from django.http import Http404, HttpResponseRedirect
+from django.urls import reverse
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 
+from .forms.album_forms import AlbumCollectionForm, AlbumWishlistForm
 from .domain.models import Album
-from .domain.exceptions import AlbumDoesNotExistError
+from .domain.exceptions import AlbumDoesNotExistError, AlbumAlreadyOwnedError
 
 # Create your views here. (should be as easy as possible and call model and/or optional service layer logic)
 
@@ -46,3 +50,35 @@ class WishlistView(LoginRequiredMixin, generic.ListView):
         auth_user = self.request.user
         domain_user = auth_user.albumz_user
         return domain_user.albums.filter(owned=False)
+    
+
+@login_required
+def create_album_collection(request):
+    if request.method == "GET":
+        return render(
+            request, 
+            "albumz_app/forms/album_collection_form.html", 
+            {"form": AlbumCollectionForm()}
+        )
+    else:
+        # POST
+        domain_user = request.user.albumz_user
+        form = AlbumCollectionForm(request.POST)
+        if form.is_valid():
+            album = form.save(commit=False)
+            try:
+                domain_user.add_to_collection(album)
+            except AlbumAlreadyOwnedError:
+                form.add_error(None, "You already own this album!")
+                return render(
+                    request,
+                    "albumz_app/forms/album_collection_form.html",
+                    {"form": form}
+                )
+            else:
+                return HttpResponseRedirect(reverse("albumz:collection"))
+        return render(
+            request,
+            "albumz_app/forms/album_collection_form.html",
+            {"form": form}
+        )

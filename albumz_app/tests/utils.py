@@ -1,5 +1,7 @@
 from string import ascii_letters
 from random import choice, randint
+from django.utils import timezone
+from datetime import timedelta
 
 from ..domain.models import Album
 
@@ -24,3 +26,9 @@ class AlbumTestHelpers:
                 )
             )
         return albums_in_collection
+    
+def future_date():
+    return timezone.now().date() + timedelta(days=1)
+
+def present_date():
+    return timezone.now().date()
