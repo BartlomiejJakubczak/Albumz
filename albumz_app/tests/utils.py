@@ -1,41 +1,19 @@
-from string import ascii_letters
-from random import choice, randint
 from django.utils import timezone
 from datetime import timedelta
+from random import randint, choice
+from string import ascii_letters
 
-from ..domain.models import Album, Rating
+from ..domain.models import Rating
 
 
-class AlbumTestHelpers:
-    def create_albums(self, owned, count=randint(1, 10), user=None):
-        def create_random_string():
+def create_random_string():
             return "".join(choice(ascii_letters) for _ in range(randint(1, 10)))
-
-        if user is None:
-            if not hasattr(self, "domain_user"):
-                raise AttributeError("Test class must define self.domain_user")
-            user = self.domain_user
-        albums_in_collection = []
-        for _ in range(count):
-            albums_in_collection.append(
-                Album.objects.create(
-                    title=create_random_string(),
-                    artist=create_random_string(),
-                    user=user,
-                    owned=owned,
-                    user_rating = get_random_user_rating() if owned else None,
-                )
-            )
-        return albums_in_collection
-    
 
 def get_random_user_rating():
     return choice(Rating.choices)[0]
 
-
 def future_date():
     return timezone.now().date() + timedelta(days=1)
-
 
 def present_date():
     return timezone.now().date()

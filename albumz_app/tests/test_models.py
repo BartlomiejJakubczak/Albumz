@@ -4,7 +4,8 @@ from django.contrib.auth.models import User as AuthUser
 from random import randint, choice
 from datetime import date
 
-from .utils import AlbumTestHelpers, future_date, present_date, get_random_user_rating
+from .factories import AlbumFactoryMixin
+from .utils import future_date, present_date, get_random_user_rating
 from ..domain.models import Album
 from ..domain.exceptions import (
     AlbumAlreadyOnWishlistError,
@@ -73,7 +74,7 @@ class TestAlbumModel(TestCase):
         self.assertFalse(album.is_pub_date_valid())
 
 
-class TestUserModel(AlbumTestHelpers, TestCase):
+class TestUserModel(AlbumFactoryMixin, TestCase):
     @classmethod
     def setUpTestData(cls):
         auth_user = AuthUser.objects.create_user("testuser")

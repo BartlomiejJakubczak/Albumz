@@ -1,32 +1,23 @@
-from django.test import TestCase
 from django.urls import reverse
 from django.contrib.auth.models import User as AuthUser
 
 from random import choice
 
-from .utils import AlbumTestHelpers, future_date, present_date
+from .base import AuthenticatedDomainUserTestCase
+from .factories import AlbumFactoryMixin
+from .utils import future_date, present_date
 from ..urls import app_name
 from ..forms.album_forms import AlbumCollectionForm, AlbumWishlistForm
 from ..domain.models import Album
 
 
-class TestCollectionView(AlbumTestHelpers, TestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.password = "testuser"
-        cls.user = AuthUser.objects.create_user(
-            username="testuser", password=cls.password
-        )
-        cls.domain_user = cls.user.albumz_user
-
+class TestCollectionView(AlbumFactoryMixin, AuthenticatedDomainUserTestCase):
     def test_results_view_requires_login(self):
+        self.client.logout()
         response = self.client.get(reverse(f"{app_name}:collection"))
         self.assertRedirects(response, f"/accounts/login/?next=/{app_name}/collection/")
 
     def test_results_view_no_albums_in_collection(self):
-        # Given
-        self.client.login(username=self.user.username, password=self.password)
-        # need to put in plain text for password, because self.user.password will access the hashed password from database
         # When
         response = self.client.get(reverse(f"{app_name}:collection"))
         # Then
@@ -35,8 +26,6 @@ class TestCollectionView(AlbumTestHelpers, TestCase):
         self.assertQuerySetEqual(response.context["albums_in_collection"], set())
 
     def test_results_view_when_albums_in_collection(self):
-        # Given
-        self.client.login(username=self.user.username, password=self.password)
         albums_in_collection = self.create_albums(owned=True)
         # When
         response = self.client.get(reverse(f"{app_name}:collection"))
@@ -47,22 +36,14 @@ class TestCollectionView(AlbumTestHelpers, TestCase):
         )
 
 
-class TestDetailView(AlbumTestHelpers, TestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.password = "testuser"
-        cls.user = AuthUser.objects.create_user(
-            username="testuser", password=cls.password
-        )
-        cls.domain_user = cls.user.albumz_user
-
+class TestDetailView(AlbumFactoryMixin, AuthenticatedDomainUserTestCase):
     def test_detail_view_requires_login(self):
+        self.client.logout()
         response = self.client.get(f"/{app_name}/album/1/")
         self.assertRedirects(response, f"/accounts/login/?next=/{app_name}/album/1/")
 
     def test_detail_view_album_in_collection(self):
         # Given
-        self.client.login(username=self.user.username, password=self.password)
         albums_in_collection = self.create_albums(owned=True)
         chosen_album = choice(albums_in_collection)
         # When
@@ -75,7 +56,6 @@ class TestDetailView(AlbumTestHelpers, TestCase):
 
     def test_detail_view_album_not_in_collection(self):
         # Given
-        self.client.login(username=self.user.username, password=self.password)
         albums_in_collection = self.create_albums(owned=True)
         # When
         response = self.client.get(
@@ -87,7 +67,6 @@ class TestDetailView(AlbumTestHelpers, TestCase):
 
     def test_detail_view_album_on_wishlist(self):
         # Given
-        self.client.login(username=self.user.username, password=self.password)
         albums_on_wishlist = self.create_albums(owned=False)
         chosen_album = choice(albums_on_wishlist)
         # When
@@ -106,7 +85,6 @@ class TestDetailView(AlbumTestHelpers, TestCase):
         albums_in_collection = self.create_albums(
             owned=True, user=different_user.albumz_user
         )
-        self.client.login(username=self.user.username, password=self.password)
         chosen_album = choice(albums_in_collection)
         # When
         response = self.client.get(
@@ -116,22 +94,13 @@ class TestDetailView(AlbumTestHelpers, TestCase):
         self.assertEqual(response.status_code, 404)
 
 
-class TestWishlistView(AlbumTestHelpers, TestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.password = "testuser"
-        cls.user = AuthUser.objects.create_user(
-            username="testuser", password=cls.password
-        )
-        cls.domain_user = cls.user.albumz_user
-
+class TestWishlistView(AlbumFactoryMixin, AuthenticatedDomainUserTestCase):
     def test_wishlist_view_requires_login(self):
+        self.client.logout()
         response = self.client.get(reverse(f"{app_name}:wishlist"))
         self.assertRedirects(response, f"/accounts/login/?next=/{app_name}/wishlist/")
 
     def test_wishlist_view_no_albums_on_wishlist(self):
-        # Given
-        self.client.login(username=self.user.username, password=self.password)
         # When
         response = self.client.get(reverse(f"{app_name}:wishlist"))
         # Then
@@ -140,8 +109,6 @@ class TestWishlistView(AlbumTestHelpers, TestCase):
         self.assertQuerySetEqual(response.context["albums_on_wishlist"], set())
 
     def test_wishlist_view_when_albums_on_wishlist(self):
-        # Given
-        self.client.login(username=self.user.username, password=self.password)
         albums_on_wishlist = self.create_albums(owned=False)
         # When
         response = self.client.get(reverse(f"{app_name}:wishlist"))
@@ -152,24 +119,15 @@ class TestWishlistView(AlbumTestHelpers, TestCase):
         )
 
 
-class TestAddAlbumCollectionView(TestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.password = "testuser"
-        cls.user = AuthUser.objects.create_user(
-            username="testuser", password=cls.password
-        )
-        cls.domain_user = cls.user.albumz_user
-
+class TestAddAlbumCollectionView(AlbumFactoryMixin, AuthenticatedDomainUserTestCase):
     def test_add_album_collection_view_requires_login(self):
+        self.client.logout()
         response = self.client.get(reverse(f"{app_name}:add_collection"))
         self.assertRedirects(
             response, f"/accounts/login/?next=/{app_name}/collection/add/"
         )
 
     def test_add_album_collection_get_empty_form(self):
-        # Given
-        self.client.login(username=self.user.username, password=self.password)
         # When
         response = self.client.get(reverse(f"{app_name}:add_collection"))
         # Then
@@ -181,7 +139,6 @@ class TestAddAlbumCollectionView(TestCase):
 
     def test_add_album_collection_successful_creation(self):
         # Given
-        self.client.login(username=self.user.username, password=self.password)
         form_data = {
             "title": "Rust In Peace",
             "artist": "Megadeth",
@@ -201,7 +158,6 @@ class TestAddAlbumCollectionView(TestCase):
 
     def test_add_album_collection_validation_errors_pub_date(self):
         # Given
-        self.client.login(username=self.user.username, password=self.password)
         form_data = {
             "title": "Rust In Peace",
             "artist": "Megadeth",
@@ -226,13 +182,11 @@ class TestAddAlbumCollectionView(TestCase):
 
     def test_add_album_collection_album_already_in_collection(self):
         # Given
-        self.client.login(username=self.user.username, password=self.password)
-        album_in_collection = Album.objects.create(
-            title="Rust In Peace", artist="Megadeth", user=self.domain_user, owned=True
-        )
+        albums_in_collection = self.create_albums(owned=True)
+        album_already_in_collection = choice(albums_in_collection)
         form_data = {
-            "title": album_in_collection.title,
-            "artist": album_in_collection.artist,
+            "title": album_already_in_collection.title,
+            "artist": album_already_in_collection.artist,
             "pub_date": present_date(),
             "genre": "ROCK",
             "user_rating": "6",
@@ -246,31 +200,22 @@ class TestAddAlbumCollectionView(TestCase):
         errors = form.non_field_errors()
         self.assertIn("You already own this album!", errors)
         self.assertTrue(form.is_bound)
-        self.assertEqual(form.data["title"], "Rust In Peace")
-        self.assertEqual(form.data["artist"], "Megadeth")
+        self.assertEqual(form.data["title"], album_already_in_collection.title)
+        self.assertEqual(form.data["artist"], album_already_in_collection.artist)
         self.assertEqual(form.data["genre"], "ROCK")
         self.assertEqual(form.data["user_rating"], "6")
         self.assertEqual(form.data["pub_date"], present_date().isoformat())
 
 
-class TestAddAlbumWishlistview(TestCase):
-    @classmethod
-    def setUpTestData(cls):
-        cls.password = "testuser"
-        cls.user = AuthUser.objects.create_user(
-            username="testuser", password=cls.password
-        )
-        cls.domain_user = cls.user.albumz_user
-
+class TestAddAlbumWishlistview(AlbumFactoryMixin, AuthenticatedDomainUserTestCase):
     def test_add_album_wishlist_view_requires_login(self):
+        self.client.logout()
         response = self.client.get(reverse(f"{app_name}:add_wishlist"))
         self.assertRedirects(
             response, f"/accounts/login/?next=/{app_name}/wishlist/add/"
         )
 
     def test_add_album_wishlist_get_empty_form(self):
-        # Given
-        self.client.login(username=self.user.username, password=self.password)
         # When
         response = self.client.get(reverse(f"{app_name}:add_wishlist"))
         # Then
@@ -282,7 +227,6 @@ class TestAddAlbumWishlistview(TestCase):
 
     def test_add_album_wishlist_successful_creation(self):
         # Given
-        self.client.login(username=self.user.username, password=self.password)
         form_data = {
             "title": "Rust In Peace",
             "artist": "Megadeth",
@@ -301,7 +245,6 @@ class TestAddAlbumWishlistview(TestCase):
 
     def test_add_album_wishlist_validation_errors_pub_date(self):
         # Given
-        self.client.login(username=self.user.username, password=self.password)
         form_data = {
             "title": "Rust In Peace",
             "artist": "Megadeth",
@@ -324,13 +267,11 @@ class TestAddAlbumWishlistview(TestCase):
 
     def test_add_album_wishlist_album_already_on_wishlist(self):
         # Given
-        self.client.login(username=self.user.username, password=self.password)
-        album_on_wishlist = Album.objects.create(
-            title="Rust In Peace", artist="Megadeth", user=self.domain_user, owned=False
-        )
+        albums_on_wishlist = self.create_albums(owned=False)
+        album_already_on_wishlist = choice(albums_on_wishlist)
         form_data = {
-            "title": album_on_wishlist.title,
-            "artist": album_on_wishlist.artist,
+            "title": album_already_on_wishlist.title,
+            "artist": album_already_on_wishlist.artist,
             "pub_date": present_date(),
             "genre": "ROCK",
         }
@@ -343,20 +284,18 @@ class TestAddAlbumWishlistview(TestCase):
         errors = form.non_field_errors()
         self.assertIn("You already have this album on wishlist!", errors)
         self.assertTrue(form.is_bound)
-        self.assertEqual(form.data["title"], "Rust In Peace")
-        self.assertEqual(form.data["artist"], "Megadeth")
+        self.assertEqual(form.data["title"], album_already_on_wishlist.title)
+        self.assertEqual(form.data["artist"], album_already_on_wishlist.artist)
         self.assertEqual(form.data["genre"], "ROCK")
         self.assertEqual(form.data["pub_date"], present_date().isoformat())
 
     def test_add_album_wishlist_album_already_in_collection(self):
         # Given
-        self.client.login(username=self.user.username, password=self.password)
-        album_in_collection = Album.objects.create(
-            title="Rust In Peace", artist="Megadeth", user=self.domain_user, owned=True
-        )
+        albums_in_collection = self.create_albums(owned=True)
+        album_already_in_collection = choice(albums_in_collection)
         form_data = {
-            "title": album_in_collection.title,
-            "artist": album_in_collection.artist,
+            "title": album_already_in_collection.title,
+            "artist": album_already_in_collection.artist,
             "pub_date": present_date(),
             "genre": "ROCK",
         }
@@ -369,7 +308,7 @@ class TestAddAlbumWishlistview(TestCase):
         errors = form.non_field_errors()
         self.assertIn("You already own this album!", errors)
         self.assertTrue(form.is_bound)
-        self.assertEqual(form.data["title"], "Rust In Peace")
-        self.assertEqual(form.data["artist"], "Megadeth")
+        self.assertEqual(form.data["title"], album_already_in_collection.title)
+        self.assertEqual(form.data["artist"], album_already_in_collection.artist)
         self.assertEqual(form.data["genre"], "ROCK")
         self.assertEqual(form.data["pub_date"], present_date().isoformat())
