@@ -1,12 +1,4 @@
-{% extends "base.html" %}
-
-{% block navbar_brand %}
-    {% include "albumz_app/includes/navbar_brand.html" %}
-{% endblock %}
-
-{% block navbar_actions %}
-    {% include "registration/includes/logout_form.html" %}
-{% endblock navbar_actions %}
+{% extends "albumz_app/base_albumz.html" %}
 
 {% block title %}
     <h1>{{ album.title }}</h1>
@@ -17,7 +9,9 @@
         <li>Artist: {{ album.artist }}</li>
         <li>Genre: {{ album.get_genre_display }}</li>
         <li>Publication date: {{ album.pub_date }}</li>
-        <li>My rating: {{ album.get_user_rating_display }}</li>
+        {% if album.is_in_collection is True %}
+            <li>My rating: {{ album.get_user_rating_display }}</li>
+        {% endif %}
         <li>Added: {{ album.add_date }}</li>
     </ul>
 {% endblock content %}
