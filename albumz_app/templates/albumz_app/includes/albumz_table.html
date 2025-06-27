@@ -6,7 +6,9 @@
                     <th>Title</th>
                     <th>Artist</th>
                     <th>Add date</th>
-                    <th>My rating</th>
+                    {% if show_rating %}
+                        <th>My rating</th>
+                    {% endif %}
                     <th></th>
                 </tr>
             </thead>
@@ -19,7 +21,9 @@
                             <td>{{ album.title }}</td>
                             <td>{{ album.artist }}</td>
                             <td>{{ album.add_date }}</td>
-                            <td>{{ album.get_user_rating_display }}</td>
+                            {% if show_rating %}
+                                <td>{{ album.get_user_rating_display }}</td>
+                            {% endif %}
                             <td><a href="{% url 'albumz:detail' album.id %}">See details</a></td>
                         </tr>
                     {% endfor %}
