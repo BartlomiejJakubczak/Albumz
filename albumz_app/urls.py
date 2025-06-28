@@ -11,9 +11,9 @@ urlpatterns = [
     # ex: /albumz/collection/
     path("collection/", views.ResultsView.as_view(), name="collection"),
     # ex: /albumz/collection/add
-    path("collection/add/", views.add_album_collection, name="add_collection"),
+    path("collection/add/", views.AlbumAddColletionView.as_view(), name="add_collection"),
     # ex: /albumz/wishlist/
     path("wishlist/", views.WishlistView.as_view(), name="wishlist"),
     # ex: /albumz/wishlist/add
-    path("wishlist/add/", views.add_album_wishlist, name="add_wishlist"),
+    path("wishlist/add/", views.AlbumAddWishlistView.as_view(), name="add_wishlist"),
 ]

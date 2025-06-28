@@ -116,29 +116,6 @@ class TestUserModel(AlbumFactoryMixin, TestCase):
         # When/Then
         self.assertEqual(len(self.get_albums_in_collection()), 0)
 
-    def test_get_collection_empty_collection(self):
-        # Given
-        self.create_albums(owned=False)
-        # When
-        albums_in_collection = self.domain_user.get_collection()
-        # Then
-        self.assertEqual(
-            len(albums_in_collection), len(self.get_albums_in_collection())
-        )
-        self.assertSetEqual(
-            set(albums_in_collection), set(self.get_albums_in_collection())
-        )
-
-    def test_get_collection_albums_in_collection(self):
-        # Given
-        self.create_albums(owned=True)
-        self.create_albums(owned=False)
-        # When
-        received_albums = self.domain_user.get_collection()
-        # Then
-        self.assertEqual(len(received_albums), len(self.get_albums_in_collection()))
-        self.assertSetEqual(set(received_albums), set(self.get_albums_in_collection()))
-
     def test_add_to_collection_when_album_already_in_collection(self):
         # Given
         albums_in_collection = self.create_albums(owned=True)
@@ -250,35 +227,3 @@ class TestUserModel(AlbumFactoryMixin, TestCase):
             self.domain_user.add_to_wishlist(album_from_form)
         self.assertEqual(len(self.get_albums_on_wishlist()), len(albums_on_wishlist))
         self.assertNotIn(album_from_form, self.get_albums_on_wishlist())
-
-    def test_get_album_when_album_in_collection(self):
-        # Given
-        albums_in_collection = self.create_albums(owned=True)
-        album_in_collection = choice(albums_in_collection)
-        # When
-        album_from_collection = self.domain_user.get_album(album_in_collection.pk)
-        # Then
-        self.assertEqual(album_in_collection.pk, album_from_collection.pk)
-
-    def test_get_album_when_album_not_in_collection(self):
-        # Given
-        albums_in_collection = self.create_albums(owned=True)
-        # When/Then
-        with self.assertRaises(AlbumDoesNotExistError):
-            self.domain_user.get_album(len(albums_in_collection) + 1)
-
-    def test_get_album_when_album_on_wishlist(self):
-        # Given
-        albums_on_wishlist = self.create_albums(owned=False)
-        album_on_wishlist = choice(albums_on_wishlist)
-        # When
-        album_from_wishlist = self.domain_user.get_album(album_on_wishlist.pk)
-        # Then
-        self.assertEqual(album_from_wishlist.pk, album_from_wishlist.pk)
-
-    def test_get_album_when_album_not_on_wishlist(self):
-        # Given
-        albums_on_wishlist = self.create_albums(owned=False)
-        # When/Then
-        with self.assertRaises(AlbumDoesNotExistError):
-            self.domain_user.get_album(len(albums_on_wishlist) + 1)

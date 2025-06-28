@@ -49,15 +49,6 @@ class User(models.Model):
                 album_in_question.user_rating = album.user_rating
                 album_in_question.save()
 
-    def get_collection(self):
-        return set(self.albums.filter(owned=True))
-
-    def get_album(self, pk):
-        try:
-            return self.albums.get(pk=pk)
-        except Album.DoesNotExist:
-            raise AlbumDoesNotExistError
-
     def add_to_wishlist(self, album):
         if album not in self.albums.all():
             album.user = self
