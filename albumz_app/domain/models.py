@@ -49,13 +49,6 @@ class User(models.Model):
                 album_in_question.user_rating = album.user_rating
                 album_in_question.save()
 
-    def remove_from_collection(self, pk):
-        try:
-            album = self.albums.get(pk=pk)
-            album.delete()
-        except Album.DoesNotExist:
-            raise AlbumDoesNotExistError
-
     def get_collection(self):
         return set(self.albums.filter(owned=True))
 
@@ -77,13 +70,6 @@ class User(models.Model):
                 if album_in_question.owned
                 else AlbumAlreadyOnWishlistError
             )
-
-    def remove_from_wishlist(self, pk):
-        try:
-            album = self.albums.get(pk=pk)
-            album.delete()
-        except Album.DoesNotExist:
-            raise AlbumDoesNotExistError
 
 
 class Album(models.Model):

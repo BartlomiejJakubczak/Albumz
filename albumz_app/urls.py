@@ -6,6 +6,8 @@ app_name = "albumz"
 urlpatterns = [
     # ex: /albumz/album/5/
     path("album/<int:pk>/", views.DetailView.as_view(), name="detail"),
+    # ex: /albumz/album/5/delete
+    path("album/<int:pk>/delete", views.AlbumDeleteView.as_view(), name="delete"),
     # ex: /albumz/collection/
     path("collection/", views.ResultsView.as_view(), name="collection"),
     # ex: /albumz/collection/add

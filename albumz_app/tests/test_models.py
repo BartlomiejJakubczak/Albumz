@@ -1,7 +1,7 @@
 from django.test import TestCase
 from django.contrib.auth.models import User as AuthUser
 
-from random import randint, choice
+from random import choice
 from datetime import date
 
 from .factories import AlbumFactoryMixin
@@ -250,60 +250,6 @@ class TestUserModel(AlbumFactoryMixin, TestCase):
             self.domain_user.add_to_wishlist(album_from_form)
         self.assertEqual(len(self.get_albums_on_wishlist()), len(albums_on_wishlist))
         self.assertNotIn(album_from_form, self.get_albums_on_wishlist())
-
-    def test_remove_from_collection_when_album_already_in_collection(self):
-        # Given
-        albums_in_collection = self.create_albums(owned=True)
-        album_in_collection = choice(albums_in_collection)
-        # When
-        self.domain_user.remove_from_collection(album_in_collection.pk)
-        # Then
-        self.assertEqual(
-            len(self.get_albums_in_collection()), len(albums_in_collection) - 1
-        )
-        self.assertNotIn(album_in_collection, self.get_albums_in_collection())
-
-    def test_remove_from_collection_when_album_not_in_collection(self):
-        # Given
-        albums_in_collection = self.create_albums(owned=True)
-        # When/Then
-        with self.assertRaises(AlbumDoesNotExistError):
-            self.domain_user.remove_from_collection(len(albums_in_collection) + 1)
-        self.assertEqual(
-            len(self.get_albums_in_collection()), len(albums_in_collection)
-        )
-
-    def test_remove_from_collection_when_album_not_in_collection_empty_collection(self):
-        # When/Then
-        with self.assertRaises(AlbumDoesNotExistError):
-            self.domain_user.remove_from_collection(randint(1, 10))
-        self.assertEqual(len(self.get_albums_in_collection()), 0)
-
-    def test_remove_from_wishlist_when_album_on_wishlist(self):
-        # Given
-        albums_on_wishlist = self.create_albums(owned=False)
-        album_on_wishlist = choice(albums_on_wishlist)
-        # When
-        self.domain_user.remove_from_wishlist(album_on_wishlist.pk)
-        # Then
-        self.assertEqual(
-            len(self.get_albums_on_wishlist()), len(albums_on_wishlist) - 1
-        )
-        self.assertNotIn(album_on_wishlist, self.get_albums_on_wishlist())
-
-    def test_remove_from_wishlist_when_album_not_on_wishlist(self):
-        # Given
-        albums_on_wishlist = self.create_albums(owned=False)
-        # When
-        with self.assertRaises(AlbumDoesNotExistError):
-            self.domain_user.remove_from_wishlist(len(albums_on_wishlist) + 1)
-        self.assertEqual(len(self.get_albums_on_wishlist()), len(albums_on_wishlist))
-
-    def test_remove_from_collection_when_album_not_in_wishlist_empty_wishlist(self):
-        # When/Then
-        with self.assertRaises(AlbumDoesNotExistError):
-            self.domain_user.remove_from_wishlist(randint(1, 10))
-        self.assertEqual(len(self.get_albums_on_wishlist()), 0)
 
     def test_get_album_when_album_in_collection(self):
         # Given

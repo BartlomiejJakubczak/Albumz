@@ -1,10 +1,11 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.views import generic
+from django.views.generic.edit import DeleteView
 from django.views.decorators.cache import never_cache
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
 from django.http import Http404, HttpResponseRedirect
-from django.urls import reverse
+from django.urls import reverse, reverse_lazy
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 
@@ -121,3 +122,18 @@ def add_album_wishlist(request):
         return render(
             request, "albumz_app/forms/album_wishlist_form.html", {"form": form}
         )
+    
+
+class AlbumDeleteView(LoginRequiredMixin, DeleteView):
+    model = Album
+
+    def get_success_url(self):
+        if self.object.is_in_collection():
+            return reverse_lazy("albumz:collection")
+        return reverse_lazy("albumz:wishlist")
+    
+    def get_queryset(self):
+        auth_user = self.request.user
+        domain_user = auth_user.albumz_user
+        return domain_user.albums.all()
+    

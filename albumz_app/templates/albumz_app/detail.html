@@ -15,3 +15,7 @@
         <li>Added: {{ album.add_date }}</li>
     </ul>
 {% endblock content %}
+
+{% block footer-content %}
+    <a href="{% url 'albumz:delete' album.id %}">Delete</a>
+{% endblock footer-content %}

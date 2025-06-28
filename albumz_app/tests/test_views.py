@@ -1,7 +1,7 @@
 from django.urls import reverse
 from django.contrib.auth.models import User as AuthUser
 
-from random import choice
+from random import choice, randint
 
 from .base import AuthenticatedDomainUserTestCase
 from .factories import AlbumFactoryMixin
@@ -39,8 +39,9 @@ class TestCollectionView(AlbumFactoryMixin, AuthenticatedDomainUserTestCase):
 class TestDetailView(AlbumFactoryMixin, AuthenticatedDomainUserTestCase):
     def test_detail_view_requires_login(self):
         self.client.logout()
-        response = self.client.get(f"/{app_name}/album/1/")
-        self.assertRedirects(response, f"/accounts/login/?next=/{app_name}/album/1/")
+        album_pk = randint(1, 10)
+        response = self.client.get(reverse(f"{app_name}:detail", args=[album_pk]))
+        self.assertRedirects(response, f"/accounts/login/?next=/{app_name}/album/{album_pk}/")
 
     def test_detail_view_album_in_collection(self):
         # Given
@@ -137,7 +138,7 @@ class TestAddAlbumCollectionView(AlbumFactoryMixin, AuthenticatedDomainUserTestC
         self.assertFalse(form.is_bound)
         self.assertSetEqual(set(form.errors), set())
 
-    def test_add_album_collection_successful_creation(self):
+    def test_add_album_collection_success(self):
         # Given
         form_data = {
             "title": "Rust In Peace",
@@ -207,7 +208,7 @@ class TestAddAlbumCollectionView(AlbumFactoryMixin, AuthenticatedDomainUserTestC
         self.assertEqual(form.data["pub_date"], present_date().isoformat())
 
 
-class TestAddAlbumWishlistview(AlbumFactoryMixin, AuthenticatedDomainUserTestCase):
+class TestAddAlbumWishlistView(AlbumFactoryMixin, AuthenticatedDomainUserTestCase):
     def test_add_album_wishlist_view_requires_login(self):
         self.client.logout()
         response = self.client.get(reverse(f"{app_name}:add_wishlist"))
@@ -225,7 +226,7 @@ class TestAddAlbumWishlistview(AlbumFactoryMixin, AuthenticatedDomainUserTestCas
         self.assertFalse(form.is_bound)
         self.assertSetEqual(set(form.errors), set())
 
-    def test_add_album_wishlist_successful_creation(self):
+    def test_add_album_wishlist_success(self):
         # Given
         form_data = {
             "title": "Rust In Peace",
@@ -312,3 +313,56 @@ class TestAddAlbumWishlistview(AlbumFactoryMixin, AuthenticatedDomainUserTestCas
         self.assertEqual(form.data["artist"], album_already_in_collection.artist)
         self.assertEqual(form.data["genre"], "ROCK")
         self.assertEqual(form.data["pub_date"], present_date().isoformat())
+
+
+class TestRemoveAlbumView(AlbumFactoryMixin, AuthenticatedDomainUserTestCase):
+    def test_remove_album_view_requires_login(self):
+        self.client.logout()
+        album_pk = randint(1, 10)
+        response = self.client.get(reverse(f"{app_name}:delete", args=[album_pk]))
+        self.assertRedirects(
+            response, f"/accounts/login/?next=/{app_name}/album/{album_pk}/delete"
+        )
+
+    def test_remove_album_from_collection_success(self):
+        # Given
+        albums_in_collection = self.create_albums(owned=True)
+        chosen_album = choice(albums_in_collection)
+        # When
+        response = self.client.post(reverse(f"{app_name}:delete", args=[chosen_album.pk]), follow=True)
+        # Then
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "albumz_app/collection.html")
+        albums_displayed = response.context["albums_in_collection"]
+        self.assertNotIn(chosen_album, albums_displayed)
+
+    def test_remove_album_from_wishlist_success(self):
+        # Given
+        albums_on_wishlist = self.create_albums(owned=False)
+        chosen_album = choice(albums_on_wishlist)
+        # When
+        response = self.client.post(reverse(f"{app_name}:delete", args=[chosen_album.pk]), follow=True)
+        # Then
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "albumz_app/wishlist.html")
+        albums_displayed = response.context["albums_on_wishlist"]
+        self.assertNotIn(chosen_album, albums_displayed)
+
+    def test_remove_album_does_not_exist(self):
+        # Given
+        albums_in_collection = self.create_albums(owned=True)
+        # When
+        response = self.client.post(reverse(f"{app_name}:delete", args=[len(albums_in_collection) + 1]))
+        # Then
+        self.assertEqual(response.status_code, 404)
+
+    def test_remove_album_different_user(self):
+        # Given
+        different_user = AuthUser.objects.create_user(
+            username="different", password="different"
+        )
+        albums_in_collection = self.create_albums(owned=True, user=different_user.albumz_user)
+        # When
+        response = self.client.post(reverse(f"{app_name}:delete", args=[choice(albums_in_collection).pk]))
+        # Then
+        self.assertEqual(response.status_code, 404)
