@@ -20,3 +20,16 @@ class AlbumFactoryMixin:
                 )
             )
         return albums_in_collection
+    
+    def create_album(self, title, artist, owned, user=None):
+        if user is None:
+            if not hasattr(self, "domain_user"):
+                raise AttributeError("Test class must define self.domain_user")
+            user = self.domain_user
+        return Album.objects.create(
+                    title=title,
+                    artist=artist,
+                    user=user,
+                    owned=owned,
+                    user_rating = random_user_rating() if owned else None,
+                )

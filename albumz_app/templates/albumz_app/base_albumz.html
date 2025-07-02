@@ -10,6 +10,7 @@
 {% endblock %}
 
 {% block navbar_actions %}
+  {% comment %} {% include "albumz_app/includes/albumz_search_bar.html" %} {% endcomment %}
   <a class="nav-link" href="{% url 'albumz:collection' %}">My Collection</a>
   <a class="nav-link" href="{% url 'albumz:wishlist' %}">Wishlist</a>
   {% include "registration/includes/logout_form.html" %}

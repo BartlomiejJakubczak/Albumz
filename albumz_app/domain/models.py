@@ -62,7 +62,37 @@ class User(models.Model):
             )
 
 
+class AlbumQuerySet(models.QuerySet):
+    def in_collection(self):
+        return self.filter(owned=True)
+    
+    def on_wishlist(self):
+        return self.filter(owned=False)
+    
+    def search_query(self, query):
+        return self.filter(
+            models.Q(artist__icontains=query) | models.Q(title__icontains=query)
+        )
+
+
+class AlbumManager(models.Manager):
+    def get_queryset(self):
+        return AlbumQuerySet(self.model, using=self._db)
+    
+    def in_collection(self):
+        return self.get_queryset().in_collection()
+    
+    def on_wishlist(self):
+        return self.get_queryset().on_wishlist()
+    
+    def search_query(self, query):
+        if query:
+            return self.get_queryset().search_query(query)
+        return self.get_queryset()
+
 class Album(models.Model):
+    albums = AlbumManager()
+    objects = models.Manager()
     user = models.ForeignKey(User, models.CASCADE, related_name="albums")
     title = models.CharField(max_length=250)
     artist = models.CharField(max_length=100)

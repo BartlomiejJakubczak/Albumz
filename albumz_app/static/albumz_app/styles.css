@@ -46,3 +46,23 @@
 .my-table tr {
     height: auto; /* Remove Bootstrap row height if any */
 }
+
+th form {
+  display: flex;
+  align-items: center;
+  gap: 4px; /* space between input and button */
+  margin: 0;
+  padding: 0;
+}
+
+th form input[type="text"] {
+  height: 30px;
+  font-size: 0.9rem;
+  width: 140px; /* or a suitable width */
+}
+
+th form button {
+  height: 30px;
+  font-size: 0.9rem;
+  padding: 0 8px;
+}

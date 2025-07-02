@@ -1,7 +1,12 @@
 from django.test import TestCase
+import pytest
 
 from .utils import present_date, future_date
-from ..forms.album_forms import AlbumCollectionForm, AlbumWishlistForm
+from ..forms.album_forms import (
+    AlbumCollectionForm, 
+    AlbumWishlistForm,
+    AlbumSearchForm
+)
 
 
 class TestAlbumCollectionForm(TestCase):
@@ -120,3 +125,19 @@ class TestAlbumWishlistForm(TestCase):
         self.assertIn(
             "Publication date cannot be in the future.", form.errors["pub_date"]
         )
+
+
+class TestAlbumSearchForm:
+    @pytest.mark.parametrize(
+            "input_value", 
+            ["", "megadeth", "meg", " megadeth "]
+    )
+    def test_form_accepts_inputs(self, input_value):
+        # Given
+        form_data = {
+            "query": input_value
+        }
+        # When
+        form = AlbumSearchForm(form_data)
+        # Then
+        assert form.is_valid()

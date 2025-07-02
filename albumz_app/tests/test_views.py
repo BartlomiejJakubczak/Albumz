@@ -35,6 +35,51 @@ class TestCollectionView(AlbumFactoryMixin, AuthenticatedDomainUserTestCase):
             set(response.context["albums_in_collection"]), set(albums_in_collection)
         )
 
+    #TODO refactor whole test suites to make use of pytest fixtures for auth user and test parametrization
+
+    def test_search_when_search_query_blank(self):
+        # Given
+        albums_in_collection = self.create_albums(owned=True)
+        # When
+        response = self.client.get(reverse(f"{app_name}:collection"), {"query": ""})
+        # Then
+        self.assertEqual(response.status_code, 200)
+        self.assertSetEqual(
+            set(response.context["albums_in_collection"]), set(albums_in_collection)
+        )
+
+    def test_search_when_albums_in_collection_by_title(self):
+        # Given
+        self.create_albums(owned=True)
+        album_for_search = self.create_album(
+            title="Rust In Peace", 
+            artist="Megadeth",
+            owned=True
+        )
+        # When
+        response = self.client.get(reverse(f"{app_name}:collection"), {"query": album_for_search.title})
+        # Then
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            [album for album in response.context["albums_in_collection"]], [album_for_search]
+        )
+
+    def test_search_when_albums_in_collection_by_artist(self):
+        # Given
+        self.create_albums(owned=True)
+        album_for_search = self.create_album(
+            title="Rust In Peace", 
+            artist="Megadeth",
+            owned=True
+        )
+        # When
+        response = self.client.get(reverse(f"{app_name}:collection"), {"query": album_for_search.artist})
+        # Then
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            [album for album in response.context["albums_in_collection"]], [album_for_search]
+        )
+
 
 class TestDetailView(AlbumFactoryMixin, AuthenticatedDomainUserTestCase):
     def test_detail_view_requires_login(self):
@@ -117,6 +162,51 @@ class TestWishlistView(AlbumFactoryMixin, AuthenticatedDomainUserTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertSetEqual(
             set(response.context["albums_on_wishlist"]), set(albums_on_wishlist)
+        )
+
+    #TODO refactor whole test suites to make use of pytest fixtures for auth user and test parametrization
+
+    def test_search_when_search_query_blank(self):
+        # Given
+        albums_on_wishlist = self.create_albums(owned=False)
+        # When
+        response = self.client.get(reverse(f"{app_name}:wishlist"), {"query": ""})
+        # Then
+        self.assertEqual(response.status_code, 200)
+        self.assertSetEqual(
+            set(response.context["albums_on_wishlist"]), set(albums_on_wishlist)
+        )
+
+    def test_search_when_albums_on_wishlist_by_title(self):
+        # Given
+        self.create_albums(owned=False)
+        album_for_search = self.create_album(
+            title="Rust In Peace", 
+            artist="Megadeth",
+            owned=False
+        )
+        # When
+        response = self.client.get(reverse(f"{app_name}:wishlist"), {"query": album_for_search.title})
+        # Then
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            [album for album in response.context["albums_on_wishlist"]], [album_for_search]
+        )
+
+    def test_search_when_albums_on_wishlist_by_artist(self):
+        # Given
+        self.create_albums(owned=False)
+        album_for_search = self.create_album(
+            title="Rust In Peace", 
+            artist="Megadeth",
+            owned=False
+        )
+        # When
+        response = self.client.get(reverse(f"{app_name}:wishlist"), {"query": album_for_search.artist})
+        # Then
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            [album for album in response.context["albums_on_wishlist"]], [album_for_search]
         )
 
 

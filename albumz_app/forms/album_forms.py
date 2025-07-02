@@ -4,6 +4,10 @@ from django.utils import timezone
 from ..domain.models import Album
 
 
+class AlbumSearchForm(forms.Form):
+    query = forms.CharField(required=False, label="Search")
+
+
 class AlbumCollectionForm(forms.ModelForm):
     class Meta:
         model = Album

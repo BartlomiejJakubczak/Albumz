@@ -6,7 +6,7 @@ from django.urls import reverse_lazy
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 
-from .forms.album_forms import AlbumCollectionForm, AlbumWishlistForm
+from .forms.album_forms import AlbumCollectionForm, AlbumWishlistForm, AlbumSearchForm
 from .domain.models import Album
 from .domain.exceptions import (
     AlbumAlreadyInCollectionError, 
@@ -35,9 +35,12 @@ class CollectionView(LoginRequiredMixin, generic.ListView):
     context_object_name = "albums_in_collection"
 
     def get_queryset(self):
-        auth_user = self.request.user
-        domain_user = auth_user.albumz_user
-        return domain_user.albums.filter(owned=True)
+        domain_user = self.request.user.albumz_user
+        queryset = domain_user.albums.in_collection()
+        self.form = AlbumSearchForm(self.request.GET)
+        if self.form.is_valid():
+            queryset = queryset.search_query(self.form.cleaned_data["query"])
+        return queryset
 
 
 class WishlistView(LoginRequiredMixin, generic.ListView):
@@ -45,9 +48,12 @@ class WishlistView(LoginRequiredMixin, generic.ListView):
     context_object_name = "albums_on_wishlist"
 
     def get_queryset(self):
-        auth_user = self.request.user
-        domain_user = auth_user.albumz_user
-        return domain_user.albums.filter(owned=False)
+        domain_user = self.request.user.albumz_user
+        queryset = domain_user.albums.on_wishlist()
+        self.form = AlbumSearchForm(self.request.GET)
+        if self.form.is_valid():
+            queryset = queryset.search_query(self.form.cleaned_data["query"])
+        return queryset
 
 
 class AlbumAddColletionView(LoginRequiredMixin, FormView):
@@ -94,7 +100,6 @@ class AlbumDeleteView(LoginRequiredMixin, DeleteView):
         return reverse_lazy("albumz:wishlist")
     
     def get_queryset(self):
-        auth_user = self.request.user
-        domain_user = auth_user.albumz_user
+        domain_user = self.request.user.albumz_user
         return domain_user.albums.all()
     
