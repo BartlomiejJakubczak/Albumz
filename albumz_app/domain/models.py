@@ -5,8 +5,7 @@ from django.utils import timezone
 
 from .exceptions import (
     AlbumAlreadyOnWishlistError,
-    AlbumAlreadyOwnedError,
-    AlbumDoesNotExistError,
+    AlbumAlreadyInCollectionError,
 )
 
 
@@ -43,7 +42,7 @@ class User(models.Model):
         else:
             album_in_question = self.albums.get(title=album.title, artist=album.artist)
             if album_in_question.is_in_collection():
-                raise AlbumAlreadyOwnedError
+                raise AlbumAlreadyInCollectionError
             else:
                 album_in_question.owned = True
                 album_in_question.user_rating = album.user_rating
@@ -57,7 +56,7 @@ class User(models.Model):
         else:
             album_in_question = self.albums.get(title=album.title, artist=album.artist)
             raise (
-                AlbumAlreadyOwnedError
+                AlbumAlreadyInCollectionError
                 if album_in_question.owned
                 else AlbumAlreadyOnWishlistError
             )

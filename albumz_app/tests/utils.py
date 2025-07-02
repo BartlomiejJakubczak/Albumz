@@ -1,15 +1,15 @@
 from django.utils import timezone
 from datetime import timedelta
 from random import randint, choice
-from string import ascii_letters
+from string import ascii_letters, digits
 
 from ..domain.models import Rating
 
 
-def create_random_string():
+def random_string():
             return "".join(choice(ascii_letters) for _ in range(randint(1, 10)))
 
-def get_random_user_rating():
+def random_user_rating():
     return choice(Rating.choices)[0]
 
 def future_date():
@@ -17,3 +17,8 @@ def future_date():
 
 def present_date():
     return timezone.now().date()
+
+def random_positive_number(length=None):
+    if length is None:
+        length = randint(1, 10)
+    return (choice(digits) for _ in range(length))

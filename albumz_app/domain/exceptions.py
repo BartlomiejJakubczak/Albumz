@@ -4,7 +4,7 @@ class AlbumAlreadyOnWishlistError(Exception):
     pass
 
 
-class AlbumAlreadyOwnedError(Exception):
+class AlbumAlreadyInCollectionError(Exception):
     """Raised when trying to add an album to the collection that is already in collection."""
 
     pass

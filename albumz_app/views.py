@@ -9,7 +9,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from .forms.album_forms import AlbumCollectionForm, AlbumWishlistForm
 from .domain.models import Album
 from .domain.exceptions import (
-    AlbumAlreadyOwnedError, 
+    AlbumAlreadyInCollectionError, 
     AlbumAlreadyOnWishlistError,
 )
 
@@ -30,7 +30,7 @@ class DetailView(LoginRequiredMixin, generic.DetailView):
 
 
 @method_decorator(never_cache, name="dispatch")
-class ResultsView(LoginRequiredMixin, generic.ListView):
+class CollectionView(LoginRequiredMixin, generic.ListView):
     template_name = "albumz_app/collection.html"
     context_object_name = "albums_in_collection"
 
@@ -60,7 +60,7 @@ class AlbumAddColletionView(LoginRequiredMixin, FormView):
         album = form.save(commit=False)
         try:
             domain_user.add_to_collection(album)
-        except AlbumAlreadyOwnedError:
+        except AlbumAlreadyInCollectionError:
             form.add_error(None, "You already own this album!")
             return self.form_invalid(form)
         return super().form_valid(form)
@@ -76,7 +76,7 @@ class AlbumAddWishlistView(LoginRequiredMixin, FormView):
         album = form.save(commit=False)
         try:
             domain_user.add_to_wishlist(album)
-        except AlbumAlreadyOwnedError:
+        except AlbumAlreadyInCollectionError:
             form.add_error(None, "You already own this album!")
             return self.form_invalid(form)
         except AlbumAlreadyOnWishlistError:

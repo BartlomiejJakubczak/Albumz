@@ -5,12 +5,15 @@ from random import choice
 from datetime import date
 
 from .factories import AlbumFactoryMixin
-from .utils import future_date, present_date, get_random_user_rating
+from .utils import (
+    future_date, 
+    present_date, 
+    random_user_rating,
+)
 from ..domain.models import Album
 from ..domain.exceptions import (
     AlbumAlreadyOnWishlistError,
-    AlbumAlreadyOwnedError,
-    AlbumDoesNotExistError,
+    AlbumAlreadyInCollectionError,
 )
 
 
@@ -93,7 +96,7 @@ class TestUserModel(AlbumFactoryMixin, TestCase):
         return Album(
             title=title,
             artist=artist,
-            user_rating=get_random_user_rating(),
+            user_rating=random_user_rating(),
             user=None,
             owned=None,
         )
@@ -124,7 +127,7 @@ class TestUserModel(AlbumFactoryMixin, TestCase):
             album_already_in_collection.title, album_already_in_collection.artist
         )
         # When
-        with self.assertRaises(AlbumAlreadyOwnedError):
+        with self.assertRaises(AlbumAlreadyInCollectionError):
             self.domain_user.add_to_collection(album_from_form)
         # Then
         self.assertEqual(
@@ -223,7 +226,7 @@ class TestUserModel(AlbumFactoryMixin, TestCase):
             album_in_collection.title, album_in_collection.artist
         )
         # When/Then
-        with self.assertRaises(AlbumAlreadyOwnedError):
+        with self.assertRaises(AlbumAlreadyInCollectionError):
             self.domain_user.add_to_wishlist(album_from_form)
         self.assertEqual(len(self.get_albums_on_wishlist()), len(albums_on_wishlist))
         self.assertNotIn(album_from_form, self.get_albums_on_wishlist())
