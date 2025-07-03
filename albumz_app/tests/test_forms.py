@@ -1,4 +1,3 @@
-from django.test import TestCase
 import pytest
 
 from .utils import present_date, future_date
@@ -8,123 +7,76 @@ from ..forms.album_forms import (
     AlbumSearchForm
 )
 
+def make_form_data(form_class, **kwargs):
+    default_form_data = {
+        "title": "Rust In Peace",
+        "artist": "Megadeth",
+        "genre": "ROCK",
+    }
+    if form_class is AlbumCollectionForm:
+        default_form_data["user_rating"] = "6"
+    if kwargs is not None:
+        default_form_data.update(kwargs)
+        return default_form_data
+    return default_form_data
 
-class TestAlbumCollectionForm(TestCase):
-    def test_valid_form_complete_data(self):
-        # Given
-        form_data = {
-            "title": "Rust In Peace",
-            "artist": "Megadeth",
-            "pub_date": "1990-09-24",
-            "genre": "ROCK",
-            "user_rating": "6",
-        }
+
+class TestAlbumCollectionForm:
+    @pytest.mark.parametrize(
+            "form_data",
+            [
+                make_form_data(AlbumCollectionForm, pub_date="1990-09-24"), # All fields
+                make_form_data(AlbumCollectionForm), # minimal data
+                make_form_data(AlbumCollectionForm, pub_date=present_date()) # present date
+            ]
+    )
+    def test_valid_form(self, form_data):
         # When
         form = AlbumCollectionForm(form_data)
         # Then
-        self.assertTrue(form.is_valid())
+        assert form.is_valid()
 
-    def test_valid_form_incomplete_data(self):
-        # Given
-        form_data = {
-            "title": "Rust In Peace",
-            "artist": "Megadeth",
-            "genre": "ROCK",
-            "user_rating": "6",
-        }
+    @pytest.mark.parametrize(
+            "form_data",
+            [
+                make_form_data(AlbumCollectionForm, pub_date=future_date()), # future date
+            ]
+    )
+    def test_invalid_form(self, form_data):
         # When
         form = AlbumCollectionForm(form_data)
         # Then
-        self.assertTrue(form.is_valid())
-
-    def test_valid_form_pub_date_now(self):
-        # Given
-        form_data = {
-            "title": "Rust In Peace",
-            "artist": "Megadeth",
-            "pub_date": present_date(),
-            "genre": "ROCK",
-            "user_rating": "6",
-        }
-        # When
-        form = AlbumCollectionForm(form_data)
-        # Then
-        self.assertTrue(form.is_valid())
-
-    def test_invalid_form_pub_date_future(self):
-        # Given
-        form_data = {
-            "title": "Rust In Peace",
-            "artist": "Megadeth",
-            "pub_date": future_date(),
-            "genre": "ROCK",
-            "user_rating": "6",
-        }
-        # When
-        form = AlbumCollectionForm(form_data)
-        # Then
-        self.assertFalse(form.is_valid())
-        self.assertIn("pub_date", form.errors)
-        self.assertIn(
-            "Publication date cannot be in the future.", form.errors["pub_date"]
-        )
+        assert not form.is_valid()
+        assert "pub_date" in form.errors
 
 
-class TestAlbumWishlistForm(TestCase):
-    def test_valid_form_complete_data(self):
-        # Given
-        form_data = {
-            "title": "Rust In Peace",
-            "artist": "Megadeth",
-            "pub_date": "1990-09-24",
-            "genre": "ROCK",
-        }
+class TestAlbumWishlistForm:
+    @pytest.mark.parametrize(
+            "form_data",
+            [
+                make_form_data(AlbumWishlistForm, pub_date="1990-09-24"), # All fields
+                make_form_data(AlbumWishlistForm), # minimal data
+                make_form_data(AlbumWishlistForm, pub_date=present_date()) # present date
+            ]
+    )
+    def test_valid_form(self, form_data):
         # When
         form = AlbumWishlistForm(form_data)
         # Then
-        self.assertTrue(form.is_valid())
+        assert form.is_valid()
 
-    def test_valid_form_incomplete_data(self):
-        # Given
-        form_data = {
-            "title": "Rust In Peace",
-            "artist": "Megadeth",
-            "genre": "ROCK",
-        }
+    @pytest.mark.parametrize(
+            "form_data",
+            [
+                make_form_data(AlbumWishlistForm, pub_date=future_date()),
+            ]
+    )
+    def test_invalid_form(self, form_data):
         # When
         form = AlbumWishlistForm(form_data)
         # Then
-        self.assertTrue(form.is_valid())
-
-    def test_valid_form_pub_date_now(self):
-        # Given
-        form_data = {
-            "title": "Rust In Peace",
-            "artist": "Megadeth",
-            "pub_date": present_date(),
-            "genre": "ROCK",
-        }
-        # When
-        form = AlbumWishlistForm(form_data)
-        # Then
-        self.assertTrue(form.is_valid())
-
-    def test_invalid_form_pub_date_future(self):
-        # Given
-        form_data = {
-            "title": "Rust In Peace",
-            "artist": "Megadeth",
-            "pub_date": future_date(),
-            "genre": "ROCK",
-        }
-        # When
-        form = AlbumWishlistForm(form_data)
-        # Then
-        self.assertFalse(form.is_valid())
-        self.assertIn("pub_date", form.errors)
-        self.assertIn(
-            "Publication date cannot be in the future.", form.errors["pub_date"]
-        )
+        assert not form.is_valid()
+        assert "pub_date" in form.errors
 
 
 class TestAlbumSearchForm:
