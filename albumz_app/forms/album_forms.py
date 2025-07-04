@@ -8,7 +8,7 @@ class AlbumSearchForm(forms.Form):
     query = forms.CharField(required=False, label="Search")
 
 
-class AlbumCollectionForm(forms.ModelForm):
+class BaseAlbumForm(forms.ModelForm):
     class Meta:
         model = Album
         fields = ["title", "artist", "pub_date", "genre", "user_rating"]
@@ -25,18 +25,7 @@ class AlbumCollectionForm(forms.ModelForm):
             return pub_date
 
 
-class AlbumWishlistForm(forms.ModelForm):
-    class Meta:
-        model = Album
-        fields = ["title", "artist", "pub_date", "genre"]
+class AlbumCollectionForm(BaseAlbumForm): ...
 
-    def clean_pub_date(self):
-        pub_date = self.cleaned_data["pub_date"]
-        if pub_date is None:
-            return pub_date
-        else:
-            if pub_date > timezone.now().date():
-                raise forms.ValidationError(
-                    "Publication date cannot be in the future.",
-                )
-            return pub_date
+
+class AlbumWishlistForm(BaseAlbumForm): ...

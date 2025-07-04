@@ -18,6 +18,7 @@ class Genre(models.TextChoices):
 
 
 class Rating(models.IntegerChoices):
+    NO_OPINION_YET = 0
     TERRIBLE = 1
     BAD = 2
     AVERAGE = 3
@@ -45,7 +46,6 @@ class User(models.Model):
                 raise AlbumAlreadyInCollectionError
             else:
                 album_in_question.owned = True
-                album_in_question.user_rating = album.user_rating
                 album_in_question.save()
 
     def add_to_wishlist(self, album):
@@ -100,7 +100,7 @@ class Album(models.Model):
     pub_date = models.DateField("Date of publication.", null=True, blank=True)
     genre = models.CharField(max_length=30, choices=Genre.choices, default=Genre.OTHER)
     user_rating = models.IntegerField(
-        "Rating given by the owner of the album.", choices=Rating.choices, null=True, blank=False, default=None
+        "Rating given by the owner of the album.", choices=Rating.choices, null=False, blank=False, default=Rating.NO_OPINION_YET
     )
     add_date = models.DateField("Date of adding to the system.", auto_now_add=True)
     owned = models.BooleanField(

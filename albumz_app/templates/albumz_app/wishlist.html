@@ -6,7 +6,7 @@
 
 {% block content %}
     {% if albums_on_wishlist %}
-        {% include "albumz_app/includes/albumz_table.html" with albums=albums_on_wishlist show_rating=False %}
+        {% include "albumz_app/includes/albumz_table.html" with albums=albums_on_wishlist %}
     {% else %}
         <p>No albums on your wishlist yet.</p>
     {% endif %}

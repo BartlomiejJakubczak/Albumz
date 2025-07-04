@@ -9,9 +9,7 @@
         <li>Artist: {{ album.artist }}</li>
         <li>Genre: {{ album.get_genre_display }}</li>
         <li>Publication date: {{ album.pub_date }}</li>
-        {% if album.user_rating is not None %}
-            <li>My rating: {{ album.get_user_rating_display }}</li>
-        {% endif %}
+        <li>My rating: {{ album.get_user_rating_display }}</li>
         <li>Added: {{ album.add_date }}</li>
     </ul>
 {% endblock content %}

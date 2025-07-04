@@ -6,9 +6,7 @@
                     <th>Title</th>
                     <th>Artist</th>
                     <th>Add date</th>
-                    {% if show_rating %}
-                        <th>My rating</th>
-                    {% endif %}
+                    <th>My rating</th>
                     <th class="form">{% include "albumz_app/includes/albumz_search_bar.html" %}</th>
                 </tr>
             </thead>
@@ -21,9 +19,7 @@
                             <td>{{ album.title }}</td>
                             <td>{{ album.artist }}</td>
                             <td>{{ album.add_date }}</td>
-                            {% if show_rating %}
-                                <td>{{ album.get_user_rating_display }}</td>
-                            {% endif %}
+                            <td>{{ album.get_user_rating_display }}</td>
                             <td><a href="{% url 'albumz:detail' album.id %}">See details</a></td>
                         </tr>
                     {% endfor %}

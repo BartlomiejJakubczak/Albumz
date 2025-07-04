@@ -258,6 +258,7 @@ class TestAddAlbumWishlistView:
             "title": random_string(),
             "artist": random_string(),
             "pub_date": present_date(),
+            "user_rating": random_user_rating(),
             "genre": "ROCK",
         }
         # When
@@ -276,6 +277,7 @@ class TestAddAlbumWishlistView:
             "title": random_string(),
             "artist": random_string(),
             "pub_date": future_date(),
+            "user_rating": random_user_rating(),
             "genre": "ROCK",
         }
         # When
@@ -300,6 +302,7 @@ class TestAddAlbumWishlistView:
             "title": album_already_on_wishlist.title,
             "artist": album_already_on_wishlist.artist,
             "pub_date": present_date(),
+            "user_rating": random_user_rating(),
             "genre": "ROCK",
         }
         # When
@@ -324,6 +327,7 @@ class TestAddAlbumWishlistView:
             "title": album_already_in_collection.title,
             "artist": album_already_in_collection.artist,
             "pub_date": present_date(),
+            "user_rating": random_user_rating(),
             "genre": "ROCK",
         }
         # When

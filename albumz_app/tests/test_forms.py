@@ -1,20 +1,19 @@
 import pytest
 
-from .utils import present_date, future_date
+from .utils import present_date, future_date, random_user_rating
 from ..forms.album_forms import (
     AlbumCollectionForm, 
     AlbumWishlistForm,
     AlbumSearchForm
 )
 
-def make_form_data(form_class, **kwargs):
+def make_form_data(**kwargs):
     default_form_data = {
         "title": "Rust In Peace",
         "artist": "Megadeth",
         "genre": "ROCK",
+        "user_rating": random_user_rating(),
     }
-    if form_class is AlbumCollectionForm:
-        default_form_data["user_rating"] = "6"
     if kwargs is not None:
         default_form_data.update(kwargs)
         return default_form_data
@@ -25,9 +24,9 @@ class TestAlbumCollectionForm:
     @pytest.mark.parametrize(
             "form_data",
             [
-                make_form_data(AlbumCollectionForm, pub_date="1990-09-24"), # All fields
-                make_form_data(AlbumCollectionForm), # minimal data
-                make_form_data(AlbumCollectionForm, pub_date=present_date()) # present date
+                make_form_data(pub_date="1990-09-24"), # All fields
+                make_form_data(), # minimal data
+                make_form_data(pub_date=present_date()) # present date
             ]
     )
     def test_valid_form(self, form_data):
@@ -39,7 +38,7 @@ class TestAlbumCollectionForm:
     @pytest.mark.parametrize(
             "form_data",
             [
-                make_form_data(AlbumCollectionForm, pub_date=future_date()), # future date
+                make_form_data(pub_date=future_date()), # future date
             ]
     )
     def test_invalid_form(self, form_data):
@@ -54,9 +53,9 @@ class TestAlbumWishlistForm:
     @pytest.mark.parametrize(
             "form_data",
             [
-                make_form_data(AlbumWishlistForm, pub_date="1990-09-24"), # All fields
-                make_form_data(AlbumWishlistForm), # minimal data
-                make_form_data(AlbumWishlistForm, pub_date=present_date()) # present date
+                make_form_data(pub_date="1990-09-24"), # All fields
+                make_form_data(), # minimal data
+                make_form_data(pub_date=present_date()) # present date
             ]
     )
     def test_valid_form(self, form_data):
@@ -68,7 +67,7 @@ class TestAlbumWishlistForm:
     @pytest.mark.parametrize(
             "form_data",
             [
-                make_form_data(AlbumWishlistForm, pub_date=future_date()),
+                make_form_data(pub_date=future_date()),
             ]
     )
     def test_invalid_form(self, form_data):

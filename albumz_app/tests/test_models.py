@@ -138,24 +138,6 @@ class TestUserModel:
         assert len(self.get_albums_on_wishlist(domain_user)) == len(albums_on_wishlist) - 1
         assert album_on_wishlist not in self.get_albums_on_wishlist(domain_user)
 
-    def test_add_to_collection_when_album_on_wishlist_updated_user_rating(self, albums_factory, domain_user):
-        # Given
-        albums_on_wishlist = albums_factory(owned=False)
-        album_on_wishlist = choice(albums_on_wishlist)
-        assert album_on_wishlist.user_rating is None
-        album_from_form = self.album_from_collection_form(
-            album_on_wishlist.title, album_on_wishlist.artist
-        )
-        # When
-        domain_user.add_to_collection(album_from_form)
-        # Then
-        assert len(self.get_albums_in_collection(domain_user)) == 1
-        assert album_from_form in self.get_albums_in_collection(domain_user)
-        assert len(self.get_albums_on_wishlist(domain_user)) == len(albums_on_wishlist) - 1
-        assert album_on_wishlist not in self.get_albums_on_wishlist(domain_user)
-        added_album = Album.objects.get(title=album_from_form.title, artist=album_from_form.artist, owned = True)
-        assert added_album.user_rating is not None
-
     def test_add_to_wishlist_when_album_not_on_wishlist(self, albums_factory, domain_user):
         # Given
         albums_on_wishlist = albums_factory(owned=False)
