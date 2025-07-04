@@ -90,6 +90,7 @@ class AlbumManager(models.Manager):
             return self.get_queryset().search_query(query)
         return self.get_queryset()
 
+
 class Album(models.Model):
     albums = AlbumManager()
     objects = models.Manager()
