@@ -21,4 +21,4 @@ def present_date():
 def random_positive_number(length=None):
     if length is None:
         length = randint(1, 10)
-    return (choice(digits) for _ in range(length))
+    return int("".join((choice(digits) for _ in range(length))))
