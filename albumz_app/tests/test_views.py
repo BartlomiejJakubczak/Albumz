@@ -203,7 +203,7 @@ class TestAddAlbumCollectionView:
         response = authenticated_client.post(reverse(f"{app_name}:add_collection"), form_data)
         # Then
         assert response.status_code == 200
-        assertTemplateUsed(response, "albumz_app/forms/album_collection_form.html")
+        assertTemplateUsed(response, "albumz_app/forms/album_creation_form.html")
         form = response.context["form"]
         errors = form.errors.get("pub_date", [])
         assert "Publication date cannot be in the future." in errors
@@ -229,7 +229,7 @@ class TestAddAlbumCollectionView:
         response = authenticated_client.post(reverse(f"{app_name}:add_collection"), form_data)
         # Then
         assert response.status_code == 200
-        assertTemplateUsed(response, "albumz_app/forms/album_collection_form.html")
+        assertTemplateUsed(response, "albumz_app/forms/album_creation_form.html")
         form = response.context["form"]
         errors = form.non_field_errors()
         assert "You already own this album!" in errors
@@ -292,7 +292,7 @@ class TestAddAlbumWishlistView:
         response = authenticated_client.post(reverse(f"{app_name}:add_wishlist"), form_data)
         # Then
         assert response.status_code == 200
-        assertTemplateUsed(response, "albumz_app/forms/album_wishlist_form.html")
+        assertTemplateUsed(response, "albumz_app/forms/album_creation_form.html")
         form = response.context["form"]
         errors = form.errors.get("pub_date", [])
         assert "Publication date cannot be in the future." in errors
@@ -317,7 +317,7 @@ class TestAddAlbumWishlistView:
         response = authenticated_client.post(reverse(f"{app_name}:add_wishlist"), form_data)
         # Then
         assert response.status_code == 200
-        assertTemplateUsed(response, "albumz_app/forms/album_wishlist_form.html")
+        assertTemplateUsed(response, "albumz_app/forms/album_creation_form.html")
         form = response.context["form"]
         errors = form.non_field_errors()
         assert "You already have this album on wishlist!" in errors
@@ -342,7 +342,7 @@ class TestAddAlbumWishlistView:
         response = authenticated_client.post(reverse(f"{app_name}:add_wishlist"), form_data)
         # Then
         assert response.status_code == 200
-        assertTemplateUsed(response, "albumz_app/forms/album_wishlist_form.html")
+        assertTemplateUsed(response, "albumz_app/forms/album_creation_form.html")
         form = response.context["form"]
         errors = form.non_field_errors()
         assert "You already own this album!" in errors 

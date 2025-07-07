@@ -90,7 +90,7 @@ class WishlistView(LoginRequiredMixin, generic.ListView):
 
 
 class AlbumAddColletionView(LoginRequiredMixin, FormView):
-    template_name = "albumz_app/forms/album_collection_form.html"
+    template_name = "albumz_app/forms/album_creation_form.html"
     form_class = AlbumCollectionForm
     success_url = reverse_lazy("albumz:collection")
 
@@ -106,7 +106,7 @@ class AlbumAddColletionView(LoginRequiredMixin, FormView):
         
 
 class AlbumAddWishlistView(LoginRequiredMixin, FormView):
-    template_name = "albumz_app/forms/album_wishlist_form.html"
+    template_name = "albumz_app/forms/album_creation_form.html"
     form_class = AlbumWishlistForm
     success_url = reverse_lazy("albumz:wishlist")
 
