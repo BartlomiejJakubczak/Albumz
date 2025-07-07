@@ -12,8 +12,9 @@
         <li>My rating: {{ album.get_user_rating_display }}</li>
         <li>Added: {{ album.add_date }}</li>
     </ul>
+    <a href="{% url 'albumz:delete' album.id %}">Delete</a>
 {% endblock content %}
 
 {% block footer-content %}
-    <a href="{% url 'albumz:delete' album.id %}">Delete</a>
+    <a href="{% url 'albumz:edit' album.id %}">Edit</a>
 {% endblock footer-content %}

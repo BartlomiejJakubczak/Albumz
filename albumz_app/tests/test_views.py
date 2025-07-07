@@ -138,7 +138,7 @@ class TestSearchView:
         # Then
         assert response.status_code == 200
         context_var_name = "albums_in_collection" if view == "collection" else "albums_on_wishlist"
-        assert [album for album in response.context[context_var_name]] == [album_for_search]
+        assert album_for_search in [album for album in response.context[context_var_name]]
         
     def test_search_by_artist(self, view, authenticated_client, albums_factory):
         # Given
@@ -149,7 +149,7 @@ class TestSearchView:
         # Then
         assert response.status_code == 200
         context_var_name = "albums_in_collection" if view == "collection" else "albums_on_wishlist"
-        assert [album for album in response.context[context_var_name]] == [album_for_search]
+        assert album_for_search in [album for album in response.context[context_var_name]]
 
 
 class TestAddAlbumCollectionView:
@@ -184,7 +184,11 @@ class TestAddAlbumCollectionView:
         assert response.status_code == 200
         assertRedirects(response, reverse(f"{app_name}:collection"))
         assert form_data["title"].encode() in response.content
-        assert Album.objects.filter(title=form_data["title"], owned=True).exists()
+        assert Album.objects.filter(
+            title=form_data["title"], 
+            artist=form_data["artist"], 
+            owned=True
+        ).exists()
 
     def test_add_album_collection_validation_errors_pub_date(self, authenticated_client):
         # Given
@@ -269,7 +273,11 @@ class TestAddAlbumWishlistView:
         assert response.status_code == 200
         assertRedirects(response, reverse(f"{app_name}:wishlist"))
         assert form_data["title"].encode() in response.content 
-        assert Album.objects.filter(title=form_data["title"], owned=False).exists()
+        assert Album.objects.filter(
+            title=form_data["title"], 
+            artist=form_data["artist"], 
+            owned=False
+        ).exists()
 
     def test_add_album_wishlist_validation_errors_pub_date(self, authenticated_client):
         # Given
@@ -391,3 +399,139 @@ class TestRemoveAlbumView:
         response = authenticated_client.post(reverse(f"{app_name}:delete", args=[choice(albums_in_collection).pk]))
         # Then
         assert response.status_code == 404
+
+
+class TestEditAlbumView:
+    def test_edit_view_requires_login(self, client):
+        album_pk = random_positive_number()
+        response = client.get(reverse(f"{app_name}:edit", args=[album_pk]))
+        assertRedirects(response, f"/accounts/login/?next=/{app_name}/album/{album_pk}/edit")
+
+    @pytest.mark.parametrize("view", ["collection", "wishlist"])
+    def test_edit_view_get(self, view, authenticated_client, albums_factory):
+        # Given
+        albums = albums_factory(owned=True) if view == "collection" else albums_factory(owned=False)
+        edited_album = choice(albums)
+        # When
+        response = authenticated_client.get(reverse(f"{app_name}:edit", args=[edited_album.pk]))
+        # Then
+        assert response.status_code == 200
+        form = response.context["form"]
+        assert form.instance.title == edited_album.title
+        assert form.instance.artist == edited_album.artist
+        assert form.instance.genre == edited_album.genre
+        assert form.instance.pub_date == edited_album.pub_date
+        assert form.instance.user_rating == edited_album.user_rating
+
+    @pytest.mark.parametrize("view", ["collection", "wishlist"])
+    def test_edit_view_success(self, view, authenticated_client, albums_factory):
+        # Given
+        owned = True if view == "collection" else False
+        albums = albums_factory(owned=owned)
+        edited_album = choice(albums)
+        update_form_data = {
+            "title": random_string(),
+            "artist": random_string(),
+            "pub_date": present_date(),
+            "genre": "ROCK",
+            "user_rating": random_user_rating()
+        }
+        # When
+        response = authenticated_client.post(reverse(f"{app_name}:edit", args=[edited_album.pk]), update_form_data, follow=True)
+        # Then
+        assert response.status_code == 200
+        assertRedirects(response, reverse(f"{app_name}:{view}"))
+        assert Album.objects.filter(
+            title=update_form_data["title"], 
+            artist=update_form_data["artist"], 
+            owned=owned
+        ).exists()
+        assert not Album.objects.filter(
+            title=edited_album.title, 
+            artist=edited_album.artist, 
+            owned=owned
+        ).exists()
+
+    @pytest.mark.parametrize("owned", [True, False])
+    def test_edit_view_duplicate_album_from_different_set(self, owned, authenticated_client, albums_factory):
+        # Given
+        different_set = False if owned else True
+        albums = albums_factory(owned=owned)
+        albums_from_different_set = albums_factory(owned=different_set)
+        edited_album = choice(albums)
+        other_album = choice(albums_from_different_set)
+        update_form_data= {
+            "title": other_album.title,
+            "artist": other_album.artist,
+            "pub_date": present_date() if edited_album.pub_date is None else edited_album.pub_date,
+            "genre": edited_album.genre,
+            "user_rating": edited_album.user_rating
+        }
+        # When
+        response = authenticated_client.post(reverse(f"{app_name}:edit", args=[edited_album.pk]), update_form_data)
+        # Then
+        assert response.status_code == 200
+        form = response.context["form"]
+        errors = form.non_field_errors()
+        set_type = "collection" if different_set else "wishlist"
+        assert f"Album already a part of {set_type}!" in errors
+        assert form.instance.title == update_form_data["title"]
+        assert form.instance.artist == update_form_data["artist"]
+        assert form.instance.genre == update_form_data["genre"]
+        assert form.instance.pub_date == update_form_data["pub_date"]
+        assert form.instance.user_rating == update_form_data["user_rating"]
+
+    @pytest.mark.parametrize("owned", [True, False])
+    def test_edit_view_duplicate_album_from_the_same_set(self, owned, authenticated_client, albums_factory):
+        # Given
+        albums = albums_factory(owned=owned)
+        edited_album = choice(albums)
+        other_album = choice(albums)
+        while other_album == edited_album:
+            other_album = choice(albums)
+        update_form_data= {
+            "title": other_album.title,
+            "artist": other_album.artist,
+            "pub_date": present_date() if edited_album.pub_date is None else edited_album.pub_date,
+            "genre": edited_album.genre,
+            "user_rating": edited_album.user_rating
+        }
+        # When
+        response = authenticated_client.post(reverse(f"{app_name}:edit", args=[edited_album.pk]), update_form_data)
+        # Then
+        assert response.status_code == 200
+        form = response.context["form"]
+        errors = form.non_field_errors()
+        set_type = "collection" if owned else "wishlist"
+        assert f"Album already a part of {set_type}!" in errors
+        assert form.instance.title == update_form_data["title"]
+        assert form.instance.artist == update_form_data["artist"]
+        assert form.instance.genre == update_form_data["genre"]
+        assert form.instance.pub_date == update_form_data["pub_date"]
+        assert form.instance.user_rating == update_form_data["user_rating"]
+
+    @pytest.mark.parametrize("owned", [True, False])
+    def test_edit_view_validation_errors_pub_date(self, owned, authenticated_client, albums_factory):
+        # Given
+        albums = albums_factory(owned=owned)
+        edited_album = choice(albums)
+        update_form_data = {
+            "title": edited_album.title,
+            "artist": edited_album.artist,
+            "pub_date": future_date(),
+            "genre": edited_album.genre,
+            "user_rating": str(edited_album.user_rating),
+        }
+        # When
+        response = authenticated_client.post(reverse(f"{app_name}:edit", args=[edited_album.pk]), update_form_data)
+        # Then
+        assert response.status_code == 200
+        form = response.context["form"]
+        errors = form.errors.get("pub_date", [])
+        assert "Publication date cannot be in the future." in errors
+        assert form.is_bound
+        assert form.data["title"] == update_form_data["title"]
+        assert form.data["artist"] == update_form_data["artist"]
+        assert form.data["genre"] == update_form_data["genre"]
+        assert form.data["user_rating"] == update_form_data["user_rating"]
+        assert form.data["pub_date"] == update_form_data["pub_date"].isoformat()

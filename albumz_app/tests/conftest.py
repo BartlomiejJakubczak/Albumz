@@ -37,7 +37,7 @@ def authenticated_client(client, auth_user):
 
 @pytest.fixture
 def albums_factory(db, domain_user):
-    def create_albums(owned, count=randint(1, 10), user=None):
+    def create_albums(owned, count=randint(2, 10), user=None):
         albums_in_collection = []
         if user is None:
             user = domain_user
@@ -48,7 +48,7 @@ def albums_factory(db, domain_user):
                     artist=random_string(),
                     user=user,
                     owned=owned,
-                    user_rating = random_user_rating() if owned else None,
+                    user_rating = random_user_rating(),
                 )
             )
         return albums_in_collection
