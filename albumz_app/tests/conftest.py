@@ -1,7 +1,12 @@
 import pytest
 from django.contrib.auth import get_user_model
 from random import randint
-from .utils import random_user_rating, random_string
+from .utils import (
+    random_user_rating, 
+    random_string, 
+    random_user_genre,
+    present_date,
+)
 
 from ..domain.models import Album
 
@@ -46,10 +51,29 @@ def albums_factory(db, domain_user):
                 Album.objects.create(
                     title=random_string(),
                     artist=random_string(),
+                    genre=random_user_genre(),
+                    pub_date=present_date(),
+                    user_rating = random_user_rating(),
                     user=user,
                     owned=owned,
-                    user_rating = random_user_rating(),
                 )
             )
         return albums_in_collection
     return create_albums
+
+
+@pytest.fixture
+def form_data_factory():
+    def make_form_data(**kwargs):
+        default_form_data = {
+            "title": random_string(),
+            "artist": random_string(),
+            "genre": random_user_genre(),
+            "pub_date": present_date(),
+            "user_rating": random_user_rating(),
+        }
+        if kwargs is not None:
+            default_form_data.update(kwargs)
+            return default_form_data
+        return default_form_data
+    return make_form_data

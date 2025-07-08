@@ -63,8 +63,12 @@ class User(models.Model):
         
     def edit_album(self, album_from_db, edited_album):
         if edited_album in self.albums.all():
-            existing_album = self.albums.get(title=edited_album.title, artist=edited_album.artist)
-            raise AlbumAlreadyInCollectionError if existing_album.owned else AlbumAlreadyOnWishlistError
+            album_in_question = self.albums.get(title=edited_album.title, artist=edited_album.artist)
+            raise (
+                AlbumAlreadyInCollectionError 
+                if album_in_question.owned 
+                else AlbumAlreadyOnWishlistError
+            )
         else:
            fields_to_update = ["title", "artist", "pub_date", "genre", "user_rating"]
            for field in fields_to_update:

@@ -8,6 +8,7 @@ from .utils import (
     present_date, 
     random_user_rating,
     random_string,
+    random_user_genre,
 )
 from ..domain.models import Album
 from ..domain.exceptions import (
@@ -65,17 +66,19 @@ class TestUserModel:
             title=title,
             artist=artist,
             user_rating=random_user_rating(),
+            genre=random_user_genre(),
+            pub_date=present_date(),
             user=None,
             owned=None,
         )
 
     def get_albums_in_collection(self, domain_user):
-        albums = domain_user.albums.all()  # user.albums is the object manager
+        albums = Album.objects.filter(user=domain_user)
         albums_in_collection = filter(lambda album: album.owned == True, albums)
         return set(album for album in albums_in_collection)
 
     def get_albums_on_wishlist(self, domain_user):
-        albums = domain_user.albums.all()  # user.albums is the object manager
+        albums = Album.objects.filter(user=domain_user)
         albums_on_wishlist = filter(lambda album: album.owned == False, albums)
         return set(album for album in albums_on_wishlist)
 
@@ -105,9 +108,7 @@ class TestUserModel:
         # Given
         albums_in_collection = albums_factory(owned=True)
         albums_on_wishlist = albums_factory(owned=False)
-        album_from_form = self.album_instance(
-            "DefinitelyNotInCollection", "DefinitelyNotInCollectionArtist"
-        )
+        album_from_form = self.album_instance(random_string(), random_string())
         # When
         domain_user.add_to_collection(album_from_form)
         # Then
@@ -133,9 +134,7 @@ class TestUserModel:
     def test_add_to_wishlist_when_album_not_on_wishlist(self, albums_factory, domain_user):
         # Given
         albums_on_wishlist = albums_factory(owned=False)
-        album_from_form = self.album_instance(
-            "DefinitelyNotInCollection", "DefinitelyNotInCollectionArtist"
-        )
+        album_from_form = self.album_instance(random_string(), random_string())
         # When
         domain_user.add_to_wishlist(album_from_form)
         # Then
