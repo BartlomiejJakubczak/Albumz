@@ -13,6 +13,9 @@
         <li>Added: {{ album.add_date }}</li>
     </ul>
     <a href="{% url 'albumz:delete' album.id %}">Delete</a>
+    {% if not album.owned %}
+        <a href="{% url 'albumz:move' album.id %}">Move to collection</a>
+    {% endif %}
 {% endblock content %}
 
 {% block footer-content %}

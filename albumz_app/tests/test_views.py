@@ -297,7 +297,7 @@ class TestRemoveAlbumView:
     def test_remove_album_view_requires_login(self, client):
         album_pk = random_positive_number()
         response = client.get(reverse(f"{app_name}:delete", args=[album_pk]))
-        assertRedirects(response, f"/accounts/login/?next=/{app_name}/album/{album_pk}/delete")
+        assertRedirects(response, f"/accounts/login/?next=/{app_name}/album/{album_pk}/delete/")
 
     def test_remove_album_from_collection_success(self, authenticated_client, albums_factory):
         # Given
@@ -345,7 +345,7 @@ class TestEditAlbumView(AlbumFormMatcherMixin):
     def test_edit_view_requires_login(self, client):
         album_pk = random_positive_number()
         response = client.get(reverse(f"{app_name}:edit", args=[album_pk]))
-        assertRedirects(response, f"/accounts/login/?next=/{app_name}/album/{album_pk}/edit")
+        assertRedirects(response, f"/accounts/login/?next=/{app_name}/album/{album_pk}/edit/")
 
     @pytest.mark.parametrize("view", ["collection", "wishlist"])
     def test_edit_view_get(self, view, authenticated_client, albums_factory):
@@ -358,6 +358,24 @@ class TestEditAlbumView(AlbumFormMatcherMixin):
         assert response.status_code == 200
         form = response.context["form"]
         self.assert_unbound_form_matches(form, edited_album)
+
+    def test_edit_view_album_does_not_exist(self, authenticated_client, albums_factory):
+        # Given
+        albums_in_collection = albums_factory(owned=True)
+        albums_on_wishlist = albums_factory(owned=False)
+        # When
+        response = authenticated_client.get(reverse(f"{app_name}:edit", args=[len(albums_in_collection) + len(albums_on_wishlist) + 1]))
+        # Then
+        assert response.status_code == 404
+
+    def test_edit_view_album_from_different_user(self, authenticated_client, albums_factory, user_factory):
+        # Given
+        different_user = user_factory(username="test", password="test")
+        albums_of_different_user = albums_factory(owned=True, user=different_user.albumz_user)
+        # When
+        response = authenticated_client.get(reverse(f"{app_name}:edit", args=[choice(albums_of_different_user).pk]))
+        # Then
+        assert response.status_code == 404
 
     @pytest.mark.parametrize("view", ["collection", "wishlist"])
     def test_edit_view_success(self, view, authenticated_client, albums_factory, form_data_factory):
@@ -396,7 +414,6 @@ class TestEditAlbumView(AlbumFormMatcherMixin):
         errors = form.non_field_errors()
         set_type = "collection" if different_set else "wishlist"
         assert f"Album already a part of {set_type}!" in errors
-        assert form.is_bound
         self.assert_bound_form_matches(form, update_form_data)
 
     @pytest.mark.parametrize("owned", [True, False])
@@ -422,7 +439,6 @@ class TestEditAlbumView(AlbumFormMatcherMixin):
         errors = form.non_field_errors()
         set_type = "collection" if owned else "wishlist"
         assert f"Album already a part of {set_type}!" in errors
-        assert form.is_bound
         self.assert_bound_form_matches(form, update_form_data)
 
     @pytest.mark.parametrize("owned", [True, False])
@@ -444,5 +460,51 @@ class TestEditAlbumView(AlbumFormMatcherMixin):
         form = response.context["form"]
         errors = form.errors.get("pub_date", [])
         assert "Publication date cannot be in the future." in errors
-        assert form.is_bound
         self.assert_bound_form_matches(form, update_form_data)
+
+
+class TestMoveToCollectionView:
+    def test_move_view_requires_login(self, client):
+        album_pk = random_positive_number()
+        response = client.get(reverse(f"{app_name}:move", args=[album_pk]))
+        assertRedirects(response, f"/accounts/login/?next=/{app_name}/album/{album_pk}/move/")
+
+    def test_move_view_success(self, authenticated_client, albums_factory):
+        # Given
+        albums_on_wishlist = albums_factory(owned=False)
+        chosen_album = choice(albums_on_wishlist)
+        # When
+        response = authenticated_client.post(reverse(f"{app_name}:move", args=[chosen_album.pk]), follow=True)
+        # Then
+        assert response.status_code == 200
+        assertRedirects(response, reverse(f"{app_name}:collection"))
+        albums_displayed = response.context["albums_in_collection"]
+        assert chosen_album in albums_displayed
+
+    def test_move_view_album_already_in_collection(self, authenticated_client, albums_factory):
+        # Given
+        albums_in_collection = albums_factory(owned=True)
+        chosen_album = choice(albums_in_collection)
+        # When
+        response = authenticated_client.post(reverse(f"{app_name}:move", args=[chosen_album.pk]), follow=True)
+        # Then
+        assert response.status_code == 200
+        assertRedirects(response, reverse(f"{app_name}:detail", args=(chosen_album.pk,)))
+        album_displayed = response.context["album"]
+        assert chosen_album == album_displayed
+
+    def test_move_view_album_does_not_exist(self, authenticated_client):
+        # When
+        response = authenticated_client.post(reverse(f"{app_name}:move", args=[random_positive_number()]))
+        # Then
+        assert response.status_code == 404
+
+    def test_move_view_album_from_different_user(self, authenticated_client, albums_factory, user_factory):
+        # Given
+        different_user = user_factory(username="test", password="test")
+        albums_from_different_user = albums_factory(owned=True, user=different_user.albumz_user)
+        chosen_album = choice(albums_from_different_user)
+        # When
+        response = authenticated_client.post(reverse(f"{app_name}:move", args=[chosen_album.pk]))
+        # Then
+        assert response.status_code == 404

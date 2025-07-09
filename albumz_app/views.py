@@ -1,10 +1,12 @@
+from django.http import HttpResponseRedirect, Http404
 from django.views import generic
 from django.views.generic.edit import DeleteView, FormView, UpdateView
 from django.views.decorators.cache import never_cache
 from django.utils.decorators import method_decorator
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
 
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.views import redirect_to_login
 
 from .forms.album_forms import (
     AlbumCollectionForm, 
@@ -16,6 +18,7 @@ from .domain.models import Album
 from .domain.exceptions import (
     AlbumAlreadyInCollectionError, 
     AlbumAlreadyOnWishlistError,
+    AlbumDoesNotExistError,
 )
 
 # Create your views here. (should be as easy as possible and call model and/or optional service layer logic)
@@ -60,6 +63,20 @@ class EditView(LoginRequiredMixin, UpdateView):
     def get_queryset(self):
         domain_user = self.request.user.albumz_user
         return domain_user.albums.all()
+    
+
+def move_to_collection_view(request, pk):
+    if request.user.is_authenticated:
+        domain_user = request.user.albumz_user
+        try:
+            domain_user.move_to_collection(pk)
+            return HttpResponseRedirect(reverse("albumz:collection"))
+        except AlbumDoesNotExistError:
+            raise Http404()
+        except AlbumAlreadyInCollectionError:
+            return HttpResponseRedirect(reverse("albumz:detail", args=(pk,)))
+    else:
+        return redirect_to_login(request.get_full_path())
 
 
 @method_decorator(never_cache, name="dispatch")

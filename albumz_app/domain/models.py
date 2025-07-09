@@ -6,6 +6,7 @@ from django.utils import timezone
 from .exceptions import (
     AlbumAlreadyOnWishlistError,
     AlbumAlreadyInCollectionError,
+    AlbumDoesNotExistError,
 )
 
 
@@ -74,6 +75,16 @@ class User(models.Model):
            for field in fields_to_update:
                 setattr(album_from_db, field, getattr(edited_album, field))
                 album_from_db.save()
+
+    def move_to_collection(self, album_id):
+        try:
+            album = self.albums.get(pk=album_id)
+        except Album.DoesNotExist:
+            raise AlbumDoesNotExistError
+        if album.owned:
+            raise AlbumAlreadyInCollectionError
+        album.owned = True
+        album.save()
 
 
 class AlbumQuerySet(models.QuerySet):

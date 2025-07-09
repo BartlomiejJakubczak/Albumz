@@ -7,9 +7,11 @@ urlpatterns = [
     # ex: /albumz/album/5/
     path("album/<int:pk>/", views.DetailView.as_view(), name="detail"),
     # ex: /albumz/album/5/delete
-    path("album/<int:pk>/delete", views.AlbumDeleteView.as_view(), name="delete"),
+    path("album/<int:pk>/delete/", views.AlbumDeleteView.as_view(), name="delete"),
     # ex: /albumz/album/5/edit
-    path("album/<int:pk>/edit", views.EditView.as_view(), name="edit"),
+    path("album/<int:pk>/edit/", views.EditView.as_view(), name="edit"),
+    # ex: /albumz/album/5/move
+    path("album/<int:pk>/move/", views.move_to_collection_view, name="move"),
     # ex: /albumz/collection/
     path("collection/", views.CollectionView.as_view(), name="collection"),
     # ex: /albumz/collection/add

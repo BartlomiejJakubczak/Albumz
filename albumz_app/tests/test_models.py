@@ -14,6 +14,7 @@ from ..domain.models import Album
 from ..domain.exceptions import (
     AlbumAlreadyOnWishlistError,
     AlbumAlreadyInCollectionError,
+    AlbumDoesNotExistError,
 )
 
 
@@ -208,3 +209,36 @@ class TestUserModel:
         with pytest.raises(AlbumAlreadyInCollectionError if different_set else AlbumAlreadyOnWishlistError):
             domain_user.edit_album(edited_album, album_from_form)
         assert not edited_album == album_from_form
+
+    def test_move_to_collection_success(self, albums_factory, domain_user):
+        # Given
+        albums_on_wishlist = albums_factory(owned=False)
+        chosen_album = choice(albums_on_wishlist)
+        # When
+        domain_user.move_to_collection(chosen_album.pk)
+        # Then
+        assert Album.objects.get(pk=chosen_album.pk).is_in_collection()
+
+    def test_move_to_collection_album_does_not_exist(self, albums_factory, domain_user):
+        # Given
+        albums_in_collection = albums_factory(owned=True)
+        albums_on_wishlist = albums_factory(owned=False)
+        # When/Then
+        with pytest.raises(AlbumDoesNotExistError):
+            domain_user.move_to_collection(len(albums_in_collection) + len(albums_on_wishlist) + 1)
+
+    @pytest.mark.parametrize("owned", [True, False])
+    def test_move_to_collection_album_from_different_user(self, owned, albums_factory, user_factory, domain_user):
+        # Given
+        different_user = user_factory(username="tester", password="tester")
+        albums_of_different_user = albums_factory(owned=owned, user=different_user.albumz_user)
+        # When/Then
+        with pytest.raises(AlbumDoesNotExistError):
+            domain_user.move_to_collection(choice(albums_of_different_user).pk)
+
+    def test_move_to_collection_album_already_in_collection(self, albums_factory, domain_user):
+        # Given
+        albums_in_collection = albums_factory(owned=True)
+        # When/Then
+        with pytest.raises(AlbumAlreadyInCollectionError):
+            domain_user.move_to_collection(choice(albums_in_collection).pk)
