@@ -74,12 +74,12 @@ class TestUserModel:
         )
 
     def get_albums_in_collection(self, domain_user):
-        albums = Album.objects.filter(user=domain_user)
+        albums = Album.albums.for_user(user=domain_user)
         albums_in_collection = filter(lambda album: album.owned == True, albums)
         return set(album for album in albums_in_collection)
 
     def get_albums_on_wishlist(self, domain_user):
-        albums = Album.objects.filter(user=domain_user)
+        albums = Album.albums.for_user(user=domain_user)
         albums_on_wishlist = filter(lambda album: album.owned == False, albums)
         return set(album for album in albums_on_wishlist)
 
@@ -178,7 +178,7 @@ class TestUserModel:
         # When
         domain_user.edit_album(edited_album, album_from_form)
         # Then
-        album_from_db = Album.objects.filter(title=album_from_form.title, artist=album_from_form.artist).first()
+        album_from_db = Album.albums.for_user(user=domain_user).filter(title=album_from_form.title, artist=album_from_form.artist).first()
         assert album_from_db.pk == edited_album.pk
         assert album_from_db == album_from_form
 
@@ -217,7 +217,7 @@ class TestUserModel:
         # When
         domain_user.move_to_collection(chosen_album.pk)
         # Then
-        assert Album.objects.get(pk=chosen_album.pk).is_in_collection()
+        assert Album.albums.get(pk=chosen_album.pk).is_in_collection()
 
     def test_move_to_collection_album_does_not_exist(self, albums_factory, domain_user):
         # Given

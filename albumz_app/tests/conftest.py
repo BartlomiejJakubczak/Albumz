@@ -48,13 +48,12 @@ def albums_factory(db, domain_user):
             user = domain_user
         for _ in range(count):
             albums_in_collection.append(
-                Album.objects.create(
+                user.albums.create(
                     title=random_string(),
                     artist=random_string(),
                     genre=random_user_genre(),
                     pub_date=present_date(),
                     user_rating = random_user_rating(),
-                    user=user,
                     owned=owned,
                 )
             )

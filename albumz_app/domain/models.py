@@ -91,6 +91,9 @@ class AlbumQuerySet(models.QuerySet):
     def in_collection(self):
         return self.filter(owned=True)
     
+    def for_user(self, user):
+        return self.filter(user=user)
+    
     def on_wishlist(self):
         return self.filter(owned=False)
     
@@ -103,6 +106,9 @@ class AlbumQuerySet(models.QuerySet):
 class AlbumManager(models.Manager):
     def get_queryset(self):
         return AlbumQuerySet(self.model, using=self._db)
+    
+    def for_user(self, user):
+        return self.get_queryset().for_user(user)
     
     def in_collection(self):
         return self.get_queryset().in_collection()
@@ -118,7 +124,6 @@ class AlbumManager(models.Manager):
 
 class Album(models.Model):
     albums = AlbumManager()
-    objects = models.Manager()
     user = models.ForeignKey(User, models.CASCADE, related_name="albums")
     title = models.CharField(max_length=250)
     artist = models.CharField(max_length=100)
