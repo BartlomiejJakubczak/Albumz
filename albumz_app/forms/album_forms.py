@@ -2,6 +2,7 @@ from django import forms
 from django.utils import timezone
 
 from ..domain.models import Album
+from .. import constants
 
 
 class AlbumSearchForm(forms.Form):
@@ -20,7 +21,7 @@ class BaseAlbumForm(forms.ModelForm):
         else:
             if pub_date > timezone.now().date():
                 raise forms.ValidationError(
-                    "Publication date cannot be in the future.",
+                    constants.ResponseStrings.PUB_DATE_ERROR,
                 )
             return pub_date
 

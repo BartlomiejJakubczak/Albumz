@@ -8,6 +8,7 @@ from .exceptions import (
     AlbumAlreadyInCollectionError,
     AlbumDoesNotExistError,
 )
+from .. import constants
 
 
 class Genre(models.TextChoices):
@@ -152,7 +153,7 @@ class Album(models.Model):
         super().clean()
         if not self.is_pub_date_valid():
             raise ValidationError(
-                {"pub_date": "Publication date cannot be in the future."}
+                {"pub_date": constants.ResponseStrings.PUB_DATE_ERROR}
             )
 
     def is_in_collection(self):
