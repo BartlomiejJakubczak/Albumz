@@ -34,6 +34,10 @@ class User(models.Model):
         AuthUser, models.CASCADE, related_name="albumz_user"
     )
 
+    @property
+    def username(self):
+        return self.auth_user.username
+
     def __str__(self) -> str:
         return f"{self.auth_user.username}"
 

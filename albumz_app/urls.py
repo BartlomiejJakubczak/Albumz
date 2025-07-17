@@ -1,7 +1,7 @@
 from django.urls import path
 
-from . import views
-from . import constants
+from albumz_app import views, constants
+
 
 app_name = constants.APP_NAME
 urlpatterns = [
