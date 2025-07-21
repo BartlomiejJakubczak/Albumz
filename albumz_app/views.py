@@ -114,9 +114,9 @@ class AlbumAddColletionView(LoginRequiredMixin, FormView):
 
     def form_valid(self, form):
         domain_user = self.request.user.albumz_user
-        album = form.save(commit=False)
+        album_data = form.save(commit=False)
         try:
-            domain_user.add_to_collection(album)
+            domain_user.add_to_collection(album_data)
         except AlbumAlreadyInCollectionError:
             form.add_error(None, constants.ResponseStrings.ALBUM_IN_COLLECTION_ERROR)
             return self.form_invalid(form)

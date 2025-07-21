@@ -41,45 +41,53 @@ class User(models.Model):
     def __str__(self) -> str:
         return f"{self.auth_user.username}"
 
-    def add_to_collection(self, album):
-        if album not in self.albums.all():
-            album.user = self
-            album.owned = True
-            album.save()
-        else:
-            album_in_question = self.albums.get(title=album.title, artist=album.artist)
-            if album_in_question.is_in_collection():
+    def add_to_collection(self, unsaved_album):
+        existing_album = self.albums.filter(
+            title=unsaved_album.title,
+            artist=unsaved_album.artist,
+        ).first()
+        if existing_album:
+            if existing_album.owned:
                 raise AlbumAlreadyInCollectionError
             else:
-                album_in_question.owned = True
-                album_in_question.save()
-
-    def add_to_wishlist(self, album):
-        if album not in self.albums.all():
-            album.user = self
-            album.owned = False
-            album.save()
+                existing_album.owned = True
+                existing_album.save()
         else:
-            album_in_question = self.albums.get(title=album.title, artist=album.artist)
+            unsaved_album.user = self
+            unsaved_album.owned = True
+            unsaved_album.save()
+
+    def add_to_wishlist(self, unsaved_album):
+        existing_album = self.albums.filter(
+            title=unsaved_album.title,
+            artist=unsaved_album.artist,
+        ).first()
+        if existing_album:
             raise (
                 AlbumAlreadyInCollectionError
-                if album_in_question.owned
+                if existing_album.owned
                 else AlbumAlreadyOnWishlistError
             )
+        else:
+            unsaved_album.user = self
+            unsaved_album.owned = False
+            unsaved_album.save()
         
-    def edit_album(self, album_from_db, edited_album):
-        # there's a bug - you can't edit an album without changing its title or artist
-        if edited_album in self.albums.all():
-            album_in_question = self.albums.get(title=edited_album.title, artist=edited_album.artist)
+    def edit_album(self, album_from_db, unsaved_album):
+        existing_album = self.albums.filter(
+            title=unsaved_album.title,
+            artist=unsaved_album.artist,
+        ).first()
+        if existing_album and existing_album.pk != album_from_db.pk:
             raise (
                 AlbumAlreadyInCollectionError 
-                if album_in_question.owned 
+                if existing_album.owned 
                 else AlbumAlreadyOnWishlistError
             )
         else:
             fields_to_update = ["title", "artist", "pub_date", "genre", "user_rating"]
             for field in fields_to_update:
-                setattr(album_from_db, field, getattr(edited_album, field))
+                setattr(album_from_db, field, getattr(unsaved_album, field))
             album_from_db.save()
 
     def move_to_collection(self, album_id):

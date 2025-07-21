@@ -8,8 +8,6 @@ from .utils import (
     present_date,
 )
 
-from ..domain.models import Album
-
 
 User = get_user_model()
 user_password = "testpass"

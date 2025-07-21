@@ -401,6 +401,23 @@ class TestEditAlbumView(AlbumFormMatcherMixin):
         assertRedirects(response, reverse(f"{app_name}:{view}"))
         assert update_form_data["title"] in response.content.decode()
 
+    @pytest.mark.parametrize("view", [constants.URLNames.COLLECTION, constants.URLNames.WISHLIST])
+    def test_edit_view_success_same_title_and_artist(self, view, authenticated_client, albums_factory, form_data_factory):
+        # Given
+        owned = True if view == constants.URLNames.COLLECTION else False
+        albums = albums_factory(owned=owned)
+        edited_album = choice(albums)
+        update_form_data = form_data_factory(
+            title=edited_album.title,
+            artist=edited_album.artist,
+        )
+        # When
+        response = authenticated_client.post(reverse(constants.ReverseURLNames.EDIT, args=[edited_album.pk]), update_form_data, follow=True)
+        # Then
+        assert response.status_code == 200
+        assertRedirects(response, reverse(f"{app_name}:{view}"))
+        assert update_form_data["title"] in response.content.decode()
+
     @pytest.mark.parametrize("owned", [True, False])
     def test_edit_view_duplicate_album_from_different_set(self, owned, authenticated_client, albums_factory, form_data_factory):
         # Given
