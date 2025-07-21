@@ -36,6 +36,8 @@ class ResponseStrings(BaseEnum):
     PUB_DATE_ERROR = "Publication date cannot be in the future."
     ALBUM_IN_COLLECTION_ERROR = "You already own this album!"
     ALBUM_ON_WISHLIST_ERROR = "You already have this album on wishlist!"
+    ALBUM_DOES_NOT_EXIST_ERROR = "Album does not exist."
+    MOVED_TO_COLLECTION = "Album has been moved to collection."
 
 
 class TemplateContextVariables(BaseEnum):

@@ -415,6 +415,7 @@ class TestEditAlbumView(AlbumFormMatcherMixin):
             pub_date=edited_album.pub_date,
             genre=edited_album.genre,
             user_rating=edited_album.user_rating,
+            owned=edited_album.owned,
         )
         # When
         response = authenticated_client.post(reverse(constants.ReverseURLNames.EDIT, args=[edited_album.pk]), update_form_data)
@@ -440,6 +441,7 @@ class TestEditAlbumView(AlbumFormMatcherMixin):
             pub_date=edited_album.pub_date,
             genre=edited_album.genre,
             user_rating=edited_album.user_rating,
+            owned=edited_album.owned,
         )
         # When
         response = authenticated_client.post(reverse(constants.ReverseURLNames.EDIT, args=[edited_album.pk]), update_form_data)

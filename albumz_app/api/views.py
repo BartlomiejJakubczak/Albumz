@@ -1,12 +1,18 @@
-from rest_framework import generics
+from rest_framework import viewsets
 from rest_framework import permissions
-from rest_framework.decorators import api_view
+from rest_framework import status
+from rest_framework.decorators import api_view, action
 from rest_framework.reverse import reverse
 from rest_framework.response import Response
+from rest_framework.exceptions import ValidationError
 
-from ..domain.models import Album, User
-from .serializers import AlbumSerializer, UserSerializer
-from .permissions import IsOwnerOrReadOnly
+from .serializers import AlbumSerializer
+from ..constants import ResponseStrings
+from ..domain.models import Album
+from ..domain.exceptions import (
+    AlbumAlreadyInCollectionError, 
+    AlbumAlreadyOnWishlistError,
+)
 
 
 @api_view(['GET'])
@@ -17,32 +23,57 @@ def api_root(request, format=None):
     })
 
 
-class AlbumsList(generics.ListCreateAPIView):
+class AlbumsViewSet(viewsets.ModelViewSet):
     """
-    List all albums, or create a new album.
+    This ViewSet automatically provides `list`, `create`, `retrieve`,
+    `update` and `destroy` actions.
     """
-    queryset = Album.albums.all()
     serializer_class = AlbumSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        domain_user = self.request.user.albumz_user
+        return domain_user.albums.all()
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user.albumz_user)
+        domain_user = self.request.user.albumz_user
+        data = serializer.validated_data
+        album = Album(**data)
+        album.user = domain_user
+        try:
+            if album.is_in_collection():
+                domain_user.add_to_collection(album)
+            elif album.is_on_wishlist():
+                domain_user.add_to_wishlist(album)
+        except AlbumAlreadyInCollectionError:
+            raise ValidationError({"detail": ResponseStrings.ALBUM_IN_COLLECTION_ERROR})
+        except AlbumAlreadyOnWishlistError:
+            raise ValidationError({"detail": ResponseStrings.ALBUM_ON_WISHLIST_ERROR})
+        else:
+            return Response(
+                AlbumSerializer(
+                    album, 
+                    context={'request': self.request}
+                ).data, 
+                status=status.HTTP_201_CREATED
+            )
+        
+    def perform_update(self, serializer):
+        domain_user = self.request.user.albumz_user
+        edited_album = Album(**serializer.validated_data)
+        try:
+            domain_user.edit_album(self.get_object(), edited_album)
+        except AlbumAlreadyInCollectionError:
+            raise ValidationError({"detail": ResponseStrings.ALBUM_IN_COLLECTION_ERROR})
+        except AlbumAlreadyOnWishlistError:
+            raise ValidationError({"detail": ResponseStrings.ALBUM_ON_WISHLIST_ERROR})
 
-
-class AlbumDetail(generics.RetrieveUpdateDestroyAPIView):
-    """
-    Retrieve, update or delete an album.
-    """
-    queryset = Album.albums.all()
-    serializer_class = AlbumSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
-
-
-class UsersList(generics.ListAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-
-
-class UserDetail(generics.RetrieveAPIView):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
+    @action(detail=True, methods=['get', 'post'], url_path='move-to-collection')
+    def move_to_collection(self, request, pk=None):
+        domain_user = request.user.albumz_user
+        try:
+            domain_user.move_to_collection(pk)
+        except AlbumAlreadyInCollectionError:
+            raise ValidationError({"detail": ResponseStrings.ALBUM_IN_COLLECTION_ERROR})
+        else:
+            return Response({"detail": ResponseStrings.MOVED_TO_COLLECTION}, status=status.HTTP_200_OK)

@@ -68,6 +68,7 @@ class User(models.Model):
             )
         
     def edit_album(self, album_from_db, edited_album):
+        # there's a bug - you can't edit an album without changing its title or artist
         if edited_album in self.albums.all():
             album_in_question = self.albums.get(title=edited_album.title, artist=edited_album.artist)
             raise (
@@ -76,10 +77,10 @@ class User(models.Model):
                 else AlbumAlreadyOnWishlistError
             )
         else:
-           fields_to_update = ["title", "artist", "pub_date", "genre", "user_rating"]
-           for field in fields_to_update:
+            fields_to_update = ["title", "artist", "pub_date", "genre", "user_rating"]
+            for field in fields_to_update:
                 setattr(album_from_db, field, getattr(edited_album, field))
-                album_from_db.save()
+            album_from_db.save()
 
     def move_to_collection(self, album_id):
         try:
