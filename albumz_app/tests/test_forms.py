@@ -1,6 +1,6 @@
 import pytest
 
-from .utils import (
+from ..test_utils.utils import (
     present_date, 
     future_date,
 )
@@ -31,6 +31,8 @@ class TestAlbumUpdateForm:
             "overrides",
             [
                 {"pub_date":future_date().isoformat()}, # future date
+                {"title": None}, # None
+                {"title": ""}, # blank
             ]
     )
     def test_invalid_form(self, overrides, form_data_factory):
@@ -40,7 +42,7 @@ class TestAlbumUpdateForm:
         form = AlbumUpdateForm(form_data)
         # Then
         assert not form.is_valid()
-        assert "pub_date" in form.errors
+        assert list(overrides.keys())[0] in form.errors
 
 
 class TestAlbumCollectionForm:
@@ -63,6 +65,8 @@ class TestAlbumCollectionForm:
             "overrides",
             [
                 {"pub_date":future_date().isoformat()}, # future date
+                {"title": None}, # None
+                {"title": ""}, # blank
             ]
     )
     def test_invalid_form(self, overrides, form_data_factory):
@@ -72,7 +76,7 @@ class TestAlbumCollectionForm:
         form = AlbumCollectionForm(form_data)
         # Then
         assert not form.is_valid()
-        assert "pub_date" in form.errors
+        assert list(overrides.keys())[0] in form.errors
 
 
 class TestAlbumWishlistForm:
@@ -94,7 +98,9 @@ class TestAlbumWishlistForm:
     @pytest.mark.parametrize(
             "overrides",
             [
-                {"pub_date":future_date().isoformat()}, # future date
+                {"pub_date": future_date().isoformat()}, # future date
+                {"title": None}, # None
+                {"title": ""}, # blank
             ]
     )
     def test_invalid_form(self, overrides, form_data_factory):
@@ -104,7 +110,7 @@ class TestAlbumWishlistForm:
         form = AlbumWishlistForm(form_data)
         # Then
         assert not form.is_valid()
-        assert "pub_date" in form.errors
+        assert list(overrides.keys())[0] in form.errors
 
 class TestAlbumSearchForm:
     @pytest.mark.parametrize(

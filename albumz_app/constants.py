@@ -1,7 +1,9 @@
 from enum import Enum
 
 APP_NAME = "albumz"
+API_APP_NAME = "api"
 
+TEST_PASSWORD = "testpass"
 
 class BaseEnum(str, Enum):
     def __str__(self):
@@ -18,6 +20,10 @@ class URLNames(BaseEnum):
     ADD_TO_COLLECTION = "add_collection"
     ADD_TO_WISHLIST = "add_wishlist"
 
+    class API(BaseEnum):
+        ALBUMS = "album-list"
+        DETAIL = "album-detail"
+
 
 class ReverseURLNames(BaseEnum):
     COLLECTION = f"{APP_NAME}:{URLNames.COLLECTION.value}"
@@ -28,6 +34,10 @@ class ReverseURLNames(BaseEnum):
     MOVE_TO_COLLECTION = f"{APP_NAME}:{URLNames.MOVE_TO_COLLECTION.value}"
     ADD_TO_COLLECTION = f"{APP_NAME}:{URLNames.ADD_TO_COLLECTION.value}"
     ADD_TO_WISHLIST = f"{APP_NAME}:{URLNames.ADD_TO_WISHLIST.value}"
+
+    class API(BaseEnum):
+        ALBUMS = f"{API_APP_NAME}:{URLNames.API.ALBUMS.value}"
+        DETAIL = f"{API_APP_NAME}:{URLNames.API.DETAIL.value}"
 
 
 class ResponseStrings(BaseEnum):

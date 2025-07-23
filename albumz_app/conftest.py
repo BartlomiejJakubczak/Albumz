@@ -1,0 +1,1 @@
+from albumz_app.test_utils.fixtures import *

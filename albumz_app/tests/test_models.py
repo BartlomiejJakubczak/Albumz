@@ -3,7 +3,7 @@ import pytest
 from random import choice
 from datetime import date
 
-from .utils import (
+from ..test_utils.utils import (
     future_date, 
     present_date, 
     random_user_rating,

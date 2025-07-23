@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework.exceptions import ValidationError
 
 from .serializers import AlbumSerializer
-from ..constants import ResponseStrings
+from ..constants import ResponseStrings, ReverseURLNames
 from ..domain.models import Album
 from ..domain.exceptions import (
     AlbumAlreadyInCollectionError, 
@@ -18,8 +18,7 @@ from ..domain.exceptions import (
 @api_view(['GET'])
 def api_root(request, format=None):
     return Response({
-        "users": reverse("api_user_list", request=request, format=format),
-        "albums": reverse("api_album_list", request=request, format=format),
+        "albums": reverse(ReverseURLNames.API.ALBUMS, request=request, format=format),
     })
 
 
@@ -33,13 +32,12 @@ class AlbumsViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         domain_user = self.request.user.albumz_user
-        return domain_user.albums.all()
+        return domain_user.albums.order_by("artist", "title")
 
     def perform_create(self, serializer):
         domain_user = self.request.user.albumz_user
         data = serializer.validated_data
         album = Album(**data)
-        album.user = domain_user
         try:
             if album.is_in_collection():
                 domain_user.add_to_collection(album)
@@ -50,13 +48,7 @@ class AlbumsViewSet(viewsets.ModelViewSet):
         except AlbumAlreadyOnWishlistError:
             raise ValidationError({"detail": ResponseStrings.ALBUM_ON_WISHLIST_ERROR})
         else:
-            return Response(
-                AlbumSerializer(
-                    album, 
-                    context={'request': self.request}
-                ).data, 
-                status=status.HTTP_201_CREATED
-            )
+            serializer.instance = album
         
     def perform_update(self, serializer):
         domain_user = self.request.user.albumz_user
@@ -67,6 +59,8 @@ class AlbumsViewSet(viewsets.ModelViewSet):
             raise ValidationError({"detail": ResponseStrings.ALBUM_IN_COLLECTION_ERROR})
         except AlbumAlreadyOnWishlistError:
             raise ValidationError({"detail": ResponseStrings.ALBUM_ON_WISHLIST_ERROR})
+        else:
+            serializer.instance = self.get_object()
 
     @action(detail=True, methods=['get', 'post'], url_path='move-to-collection')
     def move_to_collection(self, request, pk=None):

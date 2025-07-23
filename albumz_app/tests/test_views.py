@@ -7,7 +7,7 @@ from pytest_django.asserts import (
 )
 from random import choice
 
-from .utils import (
+from ..test_utils.utils import (
     future_date, 
     random_positive_number, 
     AlbumFormMatcherMixin,
