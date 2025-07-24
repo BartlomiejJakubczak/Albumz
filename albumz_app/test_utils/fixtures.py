@@ -59,7 +59,7 @@ def albums_factory(db, domain_user):
             )
         albums = []
         if mix:
-            collection_count = randint(0, count)
+            collection_count = randint(1, count - 1)
             wishlist_count = count - collection_count
             albums += [create_album(True) for _ in range(collection_count)]
             albums += [create_album(False) for _ in range(wishlist_count)]

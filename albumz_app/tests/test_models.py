@@ -9,6 +9,7 @@ from ..test_utils.utils import (
     random_user_rating,
     random_string,
     random_user_genre,
+    AlbumFiltersMixin,
 )
 from ..domain.models import Album
 from ..domain.exceptions import (
@@ -61,8 +62,12 @@ class TestAlbumModel:
         assert not album.is_pub_date_valid()
 
 
-class TestUserModel:
-    def album_instance(self, title, artist):
+class TestUserModel(AlbumFiltersMixin):
+    def album_instance(
+        self, 
+        title=random_string(), 
+        artist=random_string(),
+    ):
         return Album(
             title=title,
             artist=artist,
@@ -75,13 +80,11 @@ class TestUserModel:
 
     def get_albums_in_collection(self, domain_user):
         albums = Album.albums.for_user(user=domain_user)
-        albums_in_collection = filter(lambda album: album.owned == True, albums)
-        return set(album for album in albums_in_collection)
+        return self.filter_albums_by_ownership(True, albums)
 
     def get_albums_on_wishlist(self, domain_user):
         albums = Album.albums.for_user(user=domain_user)
-        albums_on_wishlist = filter(lambda album: album.owned == False, albums)
-        return set(album for album in albums_on_wishlist)
+        return self.filter_albums_by_ownership(False, albums)
 
     def test_new_user_has_an_empty_wishlist(self, domain_user):
         # When/Then
@@ -102,20 +105,22 @@ class TestUserModel:
         with pytest.raises(AlbumAlreadyInCollectionError):
             domain_user.add_to_collection(album_from_form)
         # Then
-        assert len(self.get_albums_in_collection(domain_user)) == len(albums_in_collection)
-        assert set(albums_in_collection) == set(self.get_albums_in_collection(domain_user))
+        actual_albums_in_collection = self.get_albums_in_collection(domain_user)
+        assert len(actual_albums_in_collection) == len(albums_in_collection)
+        assert set(albums_in_collection) == set(actual_albums_in_collection)
 
     def test_add_to_collection_when_album_not_in_collection_and_not_on_wishlist(self, albums_factory, domain_user):
         # Given
-        albums_in_collection = albums_factory(owned=True)
-        albums_on_wishlist = albums_factory(owned=False)
-        album_from_form = self.album_instance(random_string(), random_string())
+        albums = albums_factory(mix=True)
+        albums_on_wishlist = self.filter_albums_by_ownership(False, albums)
+        album_from_form = self.album_instance()
         # When
         domain_user.add_to_collection(album_from_form)
         # Then
-        assert len(self.get_albums_in_collection(domain_user)) == len(albums_in_collection) + 1
+        actual_albums_in_collection = self.get_albums_in_collection(domain_user)
+        assert len(actual_albums_in_collection) == len(self.filter_albums_by_ownership(True, albums)) + 1
         assert len(self.get_albums_on_wishlist(domain_user)) == len(albums_on_wishlist)
-        assert album_from_form in self.get_albums_in_collection(domain_user)
+        assert album_from_form in actual_albums_in_collection
 
     def test_add_to_collection_when_album_on_wishlist(self, albums_factory, domain_user):
         # Given
@@ -127,20 +132,23 @@ class TestUserModel:
         # When
         domain_user.add_to_collection(album_from_form)
         # Then
-        assert len(self.get_albums_in_collection(domain_user)) == 1
-        assert album_from_form in self.get_albums_in_collection(domain_user)
-        assert len(self.get_albums_on_wishlist(domain_user)) == len(albums_on_wishlist) - 1
-        assert album_on_wishlist not in self.get_albums_on_wishlist(domain_user)
+        actual_albums_in_collection = self.get_albums_in_collection(domain_user)
+        actual_albums_on_wishlist = self.get_albums_on_wishlist(domain_user)
+        assert len(actual_albums_in_collection) == 1
+        assert album_from_form in actual_albums_in_collection
+        assert len(actual_albums_on_wishlist) == len(albums_on_wishlist) - 1
+        assert album_on_wishlist not in actual_albums_on_wishlist
 
     def test_add_to_wishlist_when_album_not_on_wishlist(self, albums_factory, domain_user):
         # Given
         albums_on_wishlist = albums_factory(owned=False)
-        album_from_form = self.album_instance(random_string(), random_string())
+        album_from_form = self.album_instance()
         # When
         domain_user.add_to_wishlist(album_from_form)
         # Then
-        assert len(self.get_albums_on_wishlist(domain_user)) == len(albums_on_wishlist) + 1
-        assert album_from_form in self.get_albums_on_wishlist(domain_user)
+        actual_albums_on_wishlist = self.get_albums_on_wishlist(domain_user)
+        assert len(actual_albums_on_wishlist) == len(albums_on_wishlist) + 1
+        assert album_from_form in actual_albums_on_wishlist
 
     def test_add_to_wishlist_when_album_already_on_wishlist(self, albums_factory, domain_user):
         # Given
@@ -152,29 +160,29 @@ class TestUserModel:
         # When/Then
         with pytest.raises(AlbumAlreadyOnWishlistError):
             domain_user.add_to_wishlist(album_from_form)
-        assert len(self.get_albums_on_wishlist(domain_user)) == len(albums_on_wishlist)
-        assert album_on_wishlist in self.get_albums_on_wishlist(domain_user)
+        actual_albums_on_wishlist = self.get_albums_on_wishlist(domain_user)
+        assert len(actual_albums_on_wishlist) == len(albums_on_wishlist)
+        assert album_on_wishlist in actual_albums_on_wishlist
 
     def test_add_to_wishlist_when_album_already_in_collection(self, albums_factory, domain_user):
         # Given
-        albums_on_wishlist = albums_factory(owned=False)
-        albums_in_collection = albums_factory(owned=True)
-        album_in_collection = choice(albums_in_collection)
+        albums = albums_factory(mix=True)
+        album_in_collection = choice(self.filter_albums_by_ownership(True, albums))
         album_from_form = self.album_instance(
             album_in_collection.title, album_in_collection.artist
         )
         # When/Then
         with pytest.raises(AlbumAlreadyInCollectionError):
             domain_user.add_to_wishlist(album_from_form)
-        assert len(self.get_albums_on_wishlist(domain_user)) == len(albums_on_wishlist)
-        assert album_from_form not in self.get_albums_on_wishlist(domain_user)
+        actual_albums_on_wishlist = self.get_albums_on_wishlist(domain_user)
+        assert len(actual_albums_on_wishlist) == len(self.filter_albums_by_ownership(False, albums))
+        assert album_from_form not in actual_albums_on_wishlist
 
-    @pytest.mark.parametrize("owned", [True, False])
-    def test_edit_album_success(self, owned, albums_factory, domain_user):
+    def test_edit_album_success(self, albums_factory, domain_user):
         # Given
-        albums = albums_factory(owned=owned)
+        albums = albums_factory(mix=True)
         edited_album = choice(albums)
-        album_from_form = self.album_instance(title=random_string(), artist=random_string())
+        album_from_form = self.album_instance()
         # When
         domain_user.edit_album(edited_album, album_from_form)
         # Then
@@ -182,17 +190,16 @@ class TestUserModel:
         assert album_from_db.pk == edited_album.pk
         assert album_from_db == album_from_form
 
-    @pytest.mark.parametrize("owned", [True, False])
-    def test_edit_album_duplicate_when_album_from_the_same_set(self, owned, albums_factory, domain_user):
+    def test_edit_album_duplicate_when_album_from_the_same_set(self, albums_factory, domain_user):
         # Given
-        albums = albums_factory(owned=owned)
+        albums = albums_factory(mix=True)
         edited_album = choice(albums)
         other_album = choice(albums)
         while other_album == edited_album:
             other_album = choice(albums)
         album_from_form = self.album_instance(title=other_album.title, artist=other_album.artist)
         # When/Then
-        with pytest.raises(AlbumAlreadyInCollectionError if owned else AlbumAlreadyOnWishlistError):
+        with pytest.raises(AlbumAlreadyInCollectionError if other_album.owned else AlbumAlreadyOnWishlistError):
             domain_user.edit_album(edited_album, album_from_form)
         assert not edited_album == album_from_form
 
@@ -221,17 +228,15 @@ class TestUserModel:
 
     def test_move_to_collection_album_does_not_exist(self, albums_factory, domain_user):
         # Given
-        albums_in_collection = albums_factory(owned=True)
-        albums_on_wishlist = albums_factory(owned=False)
+        albums = albums_factory(mix=True)
         # When/Then
         with pytest.raises(AlbumDoesNotExistError):
-            domain_user.move_to_collection(len(albums_in_collection) + len(albums_on_wishlist) + 1)
+            domain_user.move_to_collection(len(albums) + 1)
 
-    @pytest.mark.parametrize("owned", [True, False])
-    def test_move_to_collection_album_from_different_user(self, owned, albums_factory, user_factory, domain_user):
+    def test_move_to_collection_album_from_different_user(self, albums_factory, user_factory, domain_user):
         # Given
         different_user = user_factory(username="tester", password="tester")
-        albums_of_different_user = albums_factory(owned=owned, user=different_user.albumz_user)
+        albums_of_different_user = albums_factory(mix=True, user=different_user.albumz_user)
         # When/Then
         with pytest.raises(AlbumDoesNotExistError):
             domain_user.move_to_collection(choice(albums_of_different_user).pk)

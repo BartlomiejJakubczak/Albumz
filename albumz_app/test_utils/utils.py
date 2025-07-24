@@ -43,3 +43,8 @@ class AlbumFormMatcherMixin:
         assert form.instance.genre == expected_album.genre
         assert form.instance.pub_date == expected_album.pub_date
         assert form.instance.user_rating == expected_album.user_rating
+
+
+class AlbumFiltersMixin:
+     def filter_albums_by_ownership(self, owned, albums):
+        return list(filter(lambda album: album.owned == owned, albums))
