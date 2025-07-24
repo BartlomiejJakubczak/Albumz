@@ -23,6 +23,8 @@ class URLNames(BaseEnum):
     class API(BaseEnum):
         ALBUMS = "album-list"
         DETAIL = "album-detail"
+        MOVE_TO_COLLECTION = "album-move-to-collection"
+        AVERAGE_RATING = "album-average-rating"
 
 
 class ReverseURLNames(BaseEnum):
@@ -38,6 +40,8 @@ class ReverseURLNames(BaseEnum):
     class API(BaseEnum):
         ALBUMS = f"{API_APP_NAME}:{URLNames.API.ALBUMS.value}"
         DETAIL = f"{API_APP_NAME}:{URLNames.API.DETAIL.value}"
+        MOVE_TO_COLLECTION = f"{API_APP_NAME}:{URLNames.API.MOVE_TO_COLLECTION.value}"
+        AVERAGE_RATING = f"{API_APP_NAME}:{URLNames.API.AVERAGE_RATING.value}"
 
 
 class ResponseStrings(BaseEnum):
@@ -48,6 +52,7 @@ class ResponseStrings(BaseEnum):
     ALBUM_ON_WISHLIST_ERROR = "You already have this album on wishlist!"
     ALBUM_DOES_NOT_EXIST_ERROR = "Album does not exist."
     MOVED_TO_COLLECTION = "Album has been moved to collection."
+    NO_RATINGS = "No ratings available."
 
 
 class TemplateContextVariables(BaseEnum):

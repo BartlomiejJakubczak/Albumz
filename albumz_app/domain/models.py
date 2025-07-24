@@ -111,6 +111,11 @@ class AlbumQuerySet(models.QuerySet):
     def on_wishlist(self):
         return self.filter(owned=False)
     
+    def average_rating(self, genre=None):
+        if genre:
+            return self.filter(genre=genre, user_rating__gt=0).aggregate(average_rating=models.Avg("user_rating"))
+        return self.filter(user_rating__gt=0).aggregate(average_rating=models.Avg("user_rating"))
+    
     def search_query(self, query):
         return self.filter(
             models.Q(artist__icontains=query) | models.Q(title__icontains=query)
@@ -120,6 +125,9 @@ class AlbumQuerySet(models.QuerySet):
 class AlbumManager(models.Manager):
     def get_queryset(self):
         return AlbumQuerySet(self.model, using=self._db)
+    
+    def average_rating(self, genre=None):
+        return self.get_queryset().average_rating(genre)
     
     def for_user(self, user):
         return self.get_queryset().for_user(user)

@@ -41,22 +41,31 @@ def domain_user(auth_user):
 
 @pytest.fixture
 def albums_factory(db, domain_user):
-    def create_albums(owned, count=randint(2, 10), user=None):
-        albums_in_collection = []
+    def create_albums(owned=None, count=randint(2, 10), user=None, mix=False):
         if user is None:
             user = domain_user
-        for _ in range(count):
-            albums_in_collection.append(
-                user.albums.create(
-                    title=random_string(),
-                    artist=random_string(),
-                    genre=random_user_genre(),
-                    pub_date=present_date(),
-                    user_rating = random_user_rating(),
-                    owned=owned,
-                )
+        if mix and owned is not None:
+            raise AttributeError("'owned' and 'mix' cannot be set simultaneously.")
+        if not mix and owned is None:
+            raise AttributeError("Either 'owned' or 'mix' parameter has to be set.")
+        def create_album(owned):
+            return user.albums.create(
+                title=random_string(),
+                artist=random_string(),
+                genre=random_user_genre(),
+                pub_date=present_date(),
+                user_rating = random_user_rating(),
+                owned=owned,
             )
-        return albums_in_collection
+        albums = []
+        if mix:
+            collection_count = randint(0, count)
+            wishlist_count = count - collection_count
+            albums += [create_album(True) for _ in range(collection_count)]
+            albums += [create_album(False) for _ in range(wishlist_count)]
+        else:
+            albums += [create_album(owned) for _ in range(count)]
+        return albums
     return create_albums
 
 
