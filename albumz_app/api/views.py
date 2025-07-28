@@ -1,29 +1,31 @@
-from rest_framework import viewsets
-from rest_framework import permissions
-from rest_framework import status
-from rest_framework.decorators import api_view, action
-from rest_framework.reverse import reverse
-from rest_framework.response import Response
+from rest_framework import permissions, status, viewsets
+from rest_framework.decorators import action, api_view
 from rest_framework.exceptions import ValidationError
+from rest_framework.response import Response
+from rest_framework.reverse import reverse
 
-from .serializers import (
-    AlbumListSerializer, 
-    AlbumDetailSerializer, 
-    GenreFilterSerializer,
-)
 from ..constants import ResponseStrings, ReverseURLNames
-from ..domain.models import Album
 from ..domain.exceptions import (
-    AlbumAlreadyInCollectionError, 
+    AlbumAlreadyInCollectionError,
     AlbumAlreadyOnWishlistError,
 )
+from ..domain.models import Album
+from .serializers import (
+    AlbumDetailSerializer,
+    AlbumListSerializer,
+    GenreFilterSerializer,
+)
 
 
-@api_view(['GET'])
+@api_view(["GET"])
 def api_root(request, format=None):
-    return Response({
-        "albums": reverse(ReverseURLNames.API.ALBUMS, request=request, format=format),
-    })
+    return Response(
+        {
+            "albums": reverse(
+                ReverseURLNames.API.ALBUMS, request=request, format=format
+            ),
+        }
+    )
 
 
 class AlbumsViewSet(viewsets.ModelViewSet):
@@ -31,12 +33,13 @@ class AlbumsViewSet(viewsets.ModelViewSet):
     This ViewSet automatically provides `list`, `create`, `retrieve`,
     `update` and `destroy` actions.
     """
+
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         domain_user = self.request.user.albumz_user
         return domain_user.albums.order_by("artist", "title")
-    
+
     def get_serializer_class(self):
         if self.action in ("list", "create"):
             return AlbumListSerializer
@@ -57,7 +60,7 @@ class AlbumsViewSet(viewsets.ModelViewSet):
             raise ValidationError({"detail": ResponseStrings.ALBUM_ON_WISHLIST_ERROR})
         else:
             serializer.instance = album
-        
+
     def perform_update(self, serializer):
         domain_user = self.request.user.albumz_user
         edited_album = Album(**serializer.validated_data)
@@ -67,10 +70,10 @@ class AlbumsViewSet(viewsets.ModelViewSet):
             raise ValidationError({"detail": ResponseStrings.ALBUM_IN_COLLECTION_ERROR})
         except AlbumAlreadyOnWishlistError:
             raise ValidationError({"detail": ResponseStrings.ALBUM_ON_WISHLIST_ERROR})
-        else: 
+        else:
             serializer.instance = self.get_object()
 
-    @action(detail=True, methods=['get'], url_path='move-to-collection')
+    @action(detail=True, methods=["get"], url_path="move-to-collection")
     def move_to_collection(self, request, pk=None):
         domain_user = request.user.albumz_user
         try:
@@ -78,14 +81,20 @@ class AlbumsViewSet(viewsets.ModelViewSet):
         except AlbumAlreadyInCollectionError:
             raise ValidationError({"detail": ResponseStrings.ALBUM_IN_COLLECTION_ERROR})
         else:
-            return Response({"detail": ResponseStrings.MOVED_TO_COLLECTION}, status=status.HTTP_200_OK)
-        
-    @action(detail=False, methods=['get'], url_path='average-rating')
+            return Response(
+                {"detail": ResponseStrings.MOVED_TO_COLLECTION},
+                status=status.HTTP_200_OK,
+            )
+
+    @action(detail=False, methods=["get"], url_path="average-rating")
     def average_rating(self, request):
         serializer = GenreFilterSerializer(data=request.query_params)
         serializer.is_valid(raise_exception=True)
-        genre = serializer.validated_data.get('genre')
-        average_rating = self.get_queryset().average_rating(genre)['average_rating']
+        genre = serializer.validated_data.get("genre")
+        average_rating = self.get_queryset().average_rating(genre)["average_rating"]
         if not average_rating:
-            return Response({"average_rating": None, "message": ResponseStrings.NO_RATINGS}, status=status.HTTP_200_OK)
+            return Response(
+                {"average_rating": None, "message": ResponseStrings.NO_RATINGS},
+                status=status.HTTP_200_OK,
+            )
         return Response({"average_rating": average_rating}, status=status.HTTP_200_OK)

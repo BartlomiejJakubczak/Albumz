@@ -1,8 +1,8 @@
 from django import forms
 from django.utils import timezone
 
-from ..domain.models import Album
 from .. import constants
+from ..domain.models import Album
 
 
 class AlbumSearchForm(forms.Form):

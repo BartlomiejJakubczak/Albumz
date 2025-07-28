@@ -6,4 +6,4 @@ class AlbumzAppConfig(AppConfig):
     name = "albumz_app"
 
     def ready(self):
-        import albumz_app.signals
+        import albumz_app.signals  # noqa: F401

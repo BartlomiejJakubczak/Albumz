@@ -5,6 +5,7 @@ API_APP_NAME = "api"
 
 TEST_PASSWORD = "testpass"
 
+
 class BaseEnum(str, Enum):
     def __str__(self):
         return self.value

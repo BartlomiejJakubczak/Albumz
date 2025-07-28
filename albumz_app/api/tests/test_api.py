@@ -1,13 +1,14 @@
-import pytest
-from rest_framework.reverse import reverse
-from rest_framework import status
 from random import choice
 from statistics import mean
 
+import pytest
+from rest_framework import status
+from rest_framework.reverse import reverse
+
+from ...constants import ResponseStrings, ReverseURLNames
 from ...domain.models import Album, Genre
-from ...constants import ReverseURLNames, ResponseStrings
 from ...test_utils.utils import (
-    future_date, 
+    future_date,
     random_positive_number,
 )
 
@@ -15,97 +16,132 @@ from ...test_utils.utils import (
 class TestAlbumsAPI:
     def strip_serializer_metadata(self, data):
         return {
-            k: v for k, v in data.items()
-            if k in {'title', 'artist', 'pub_date', 'genre', 'user_rating', 'owned'}
+            k: v
+            for k, v in data.items()
+            if k in {"title", "artist", "pub_date", "genre", "user_rating", "owned"}
         }
-    
+
     def get_average_rating(self, albums):
         return mean([album.user_rating for album in albums if album.user_rating > 0])
-    
+
     def get_average_rating_by_genre(self, genre, albums):
         albums_by_genre = filter(lambda album: album.genre == genre, albums)
         return self.get_average_rating(albums_by_genre)
-    
+
     def test_album_list_view_requires_login(self, api_client):
         response = api_client.get(reverse(ReverseURLNames.API.ALBUMS))
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
     def test_album_detail_view_requires_login(self, api_client):
-        response = api_client.get(reverse(ReverseURLNames.API.DETAIL, args=[random_positive_number()]))
+        response = api_client.get(
+            reverse(ReverseURLNames.API.DETAIL, args=[random_positive_number()])
+        )
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
     def test_album_list_view_get(self, auth_api_client, albums_factory):
         # Given
         albums = albums_factory(mix=True)
         # When
-        response = auth_api_client.get(reverse(ReverseURLNames.API.ALBUMS), format='json')
+        response = auth_api_client.get(
+            reverse(ReverseURLNames.API.ALBUMS), format="json"
+        )
         # Then
         assert response.status_code == status.HTTP_200_OK
-        for album_dict in list(response.data['results']):
+        for album_dict in list(response.data["results"]):
             assert Album(**self.strip_serializer_metadata(album_dict)) in albums
 
     @pytest.mark.parametrize("owned", [True, False])
-    def test_album_list_view_post_successful(self, owned, auth_api_client, form_data_factory):
+    def test_album_list_view_post_successful(
+        self, owned, auth_api_client, form_data_factory
+    ):
         # Given
         album_data = form_data_factory(owned=owned)
         # When
-        response = auth_api_client.post(reverse(ReverseURLNames.API.ALBUMS), album_data, format='json')
+        response = auth_api_client.post(
+            reverse(ReverseURLNames.API.ALBUMS), album_data, format="json"
+        )
         # Then
         assert response.status_code == status.HTTP_201_CREATED
 
     @pytest.mark.parametrize("owned", [True, False])
-    def test_album_list_view_post_invalid_pub_date(self, owned, auth_api_client, form_data_factory):
+    def test_album_list_view_post_invalid_pub_date(
+        self, owned, auth_api_client, form_data_factory
+    ):
         # Given
         album_data = form_data_factory(owned=owned, pub_date=future_date())
         # When
-        response = auth_api_client.post(reverse(ReverseURLNames.API.ALBUMS), album_data, format='json')
+        response = auth_api_client.post(
+            reverse(ReverseURLNames.API.ALBUMS), album_data, format="json"
+        )
         # Then
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "pub_date" in response.data
         assert ResponseStrings.PUB_DATE_ERROR in response.data["pub_date"][0]
 
     @pytest.mark.parametrize("owned", [True, False])
-    def test_album_list_view_post_blank_pub_date(self, owned, auth_api_client, form_data_factory):
+    def test_album_list_view_post_blank_pub_date(
+        self, owned, auth_api_client, form_data_factory
+    ):
         # Given
         album_data = form_data_factory(owned=owned, pub_date=None)
         # When
-        response = auth_api_client.post(reverse(ReverseURLNames.API.ALBUMS), album_data, format='json')
+        response = auth_api_client.post(
+            reverse(ReverseURLNames.API.ALBUMS), album_data, format="json"
+        )
         # Then
         assert response.status_code == status.HTTP_201_CREATED
 
-    def test_album_list_view_average_rating_no_genre(self, auth_api_client, albums_factory):
+    def test_album_list_view_average_rating_no_genre(
+        self, auth_api_client, albums_factory
+    ):
         # Given
         albums = albums_factory(mix=True)
         # When
-        response = auth_api_client.get(reverse(ReverseURLNames.API.AVERAGE_RATING), format='json')
+        response = auth_api_client.get(
+            reverse(ReverseURLNames.API.AVERAGE_RATING), format="json"
+        )
         # Then
         assert response.status_code == status.HTTP_200_OK
         assert response.data["average_rating"] == self.get_average_rating(albums)
 
     def test_album_list_view_average_rating_no_ratings(self, auth_api_client):
         # When
-        response = auth_api_client.get(reverse(ReverseURLNames.API.AVERAGE_RATING), format='json')
+        response = auth_api_client.get(
+            reverse(ReverseURLNames.API.AVERAGE_RATING), format="json"
+        )
         # Then
         assert response.status_code == status.HTTP_200_OK
         assert response.data["average_rating"] is None
         assert response.data["message"] == ResponseStrings.NO_RATINGS
 
     @pytest.mark.parametrize("genre", Genre.values)
-    def test_album_list_view_average_rating_by_genre(self, genre, auth_api_client, albums_factory):
+    def test_album_list_view_average_rating_by_genre(
+        self, genre, auth_api_client, albums_factory
+    ):
         # Given
         albums = albums_factory(count=100, mix=True)
         # When
-        response = auth_api_client.get(reverse(ReverseURLNames.API.AVERAGE_RATING), data={"genre": genre}, format='json')
+        response = auth_api_client.get(
+            reverse(ReverseURLNames.API.AVERAGE_RATING),
+            data={"genre": genre},
+            format="json",
+        )
         # Then
         assert response.status_code == status.HTTP_200_OK
-        assert response.data["average_rating"] == self.get_average_rating_by_genre(genre, albums)
+        assert response.data["average_rating"] == self.get_average_rating_by_genre(
+            genre, albums
+        )
 
-    def test_album_list_view_average_rating_all_no_opinions(self, auth_api_client, albums_factory):
+    def test_album_list_view_average_rating_all_no_opinions(
+        self, auth_api_client, albums_factory
+    ):
         # Given
         albums = albums_factory(mix=True)
         Album.albums.filter(pk__in=[album.pk for album in albums]).update(user_rating=0)
         # When
-        response = auth_api_client.get(reverse(ReverseURLNames.API.AVERAGE_RATING), format='json')
+        response = auth_api_client.get(
+            reverse(ReverseURLNames.API.AVERAGE_RATING), format="json"
+        )
         # Then
         assert response.status_code == status.HTTP_200_OK
         assert response.data["average_rating"] is None
@@ -113,41 +149,57 @@ class TestAlbumsAPI:
 
     @pytest.mark.parametrize("owned", [True, False])
     @pytest.mark.parametrize("field", ["title", "artist"])
-    def test_album_list_view_post_blank_title_or_artist(self, owned, field, auth_api_client, form_data_factory):
+    def test_album_list_view_post_blank_title_or_artist(
+        self, owned, field, auth_api_client, form_data_factory
+    ):
         # Given
         kwargs = {field: None, "owned": owned}
         album_data = form_data_factory(**kwargs)
         # When
-        response = auth_api_client.post(reverse(ReverseURLNames.API.ALBUMS), album_data, format='json')
+        response = auth_api_client.post(
+            reverse(ReverseURLNames.API.ALBUMS), album_data, format="json"
+        )
         # Then
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert field in response.data
-        assert "This field may not be blank" in response.data[field][0] or \
-        "This field may not be null" in response.data[field][0]
+        assert (
+            "This field may not be blank" in response.data[field][0]
+            or "This field may not be null" in response.data[field][0]
+        )
 
     def test_album_detail_view_get(self, auth_api_client, albums_factory):
         # Given
         albums = albums_factory(mix=True)
         chosen_album = choice(albums)
         # When
-        response = auth_api_client.get(reverse(ReverseURLNames.API.DETAIL, args=[chosen_album.pk]), format='json')
+        response = auth_api_client.get(
+            reverse(ReverseURLNames.API.DETAIL, args=[chosen_album.pk]), format="json"
+        )
         # Then
         assert response.status_code == status.HTTP_200_OK
         assert chosen_album == Album(**self.strip_serializer_metadata(response.data))
 
-    def test_album_detail_view_put_all_data_different(self, auth_api_client, albums_factory, form_data_factory):
+    def test_album_detail_view_put_all_data_different(
+        self, auth_api_client, albums_factory, form_data_factory
+    ):
         # Given
         albums = albums_factory(mix=True)
         chosen_album = choice(albums)
         form_data = form_data_factory(owned=False if chosen_album.owned else True)
         # When
-        response = auth_api_client.put(reverse(ReverseURLNames.API.DETAIL, args=[chosen_album.pk]), form_data, format='json')
+        response = auth_api_client.put(
+            reverse(ReverseURLNames.API.DETAIL, args=[chosen_album.pk]),
+            form_data,
+            format="json",
+        )
         # Then
         assert response.status_code == status.HTTP_200_OK
-        assert response.data['id'] == chosen_album.pk
-        assert Album.albums.get(pk=response.data['id']) == Album(**form_data)
+        assert response.data["id"] == chosen_album.pk
+        assert Album.albums.get(pk=response.data["id"]) == Album(**form_data)
 
-    def test_album_detail_view_put_same_artist_and_title(self, auth_api_client, albums_factory, form_data_factory):
+    def test_album_detail_view_put_same_artist_and_title(
+        self, auth_api_client, albums_factory, form_data_factory
+    ):
         # Given
         albums = albums_factory(mix=True)
         chosen_album = choice(albums)
@@ -157,13 +209,19 @@ class TestAlbumsAPI:
             owned=False if chosen_album.owned else True,
         )
         # When
-        response = auth_api_client.put(reverse(ReverseURLNames.API.DETAIL, args=[chosen_album.pk]), form_data, format='json')
+        response = auth_api_client.put(
+            reverse(ReverseURLNames.API.DETAIL, args=[chosen_album.pk]),
+            form_data,
+            format="json",
+        )
         # Then
         assert response.status_code == status.HTTP_200_OK
-        assert response.data['id'] == chosen_album.pk
-        assert Album.albums.get(pk=response.data['id']) == Album(**form_data)
+        assert response.data["id"] == chosen_album.pk
+        assert Album.albums.get(pk=response.data["id"]) == Album(**form_data)
 
-    def test_album_detail_view_put_invalid_pub_date(self, auth_api_client, albums_factory, form_data_factory):
+    def test_album_detail_view_put_invalid_pub_date(
+        self, auth_api_client, albums_factory, form_data_factory
+    ):
         # Given
         albums = albums_factory(mix=True)
         chosen_album = choice(albums)
@@ -172,7 +230,11 @@ class TestAlbumsAPI:
             owned=chosen_album.owned,
         )
         # When
-        response = auth_api_client.put(reverse(ReverseURLNames.API.DETAIL, args=[chosen_album.pk]), form_data, format='json')
+        response = auth_api_client.put(
+            reverse(ReverseURLNames.API.DETAIL, args=[chosen_album.pk]),
+            form_data,
+            format="json",
+        )
         # Then
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "pub_date" in response.data
@@ -183,26 +245,38 @@ class TestAlbumsAPI:
         albums = albums_factory(mix=True)
         chosen_album = choice(albums)
         # When
-        response = auth_api_client.delete(reverse(ReverseURLNames.API.DETAIL, args=[chosen_album.pk]), format='json')
+        response = auth_api_client.delete(
+            reverse(ReverseURLNames.API.DETAIL, args=[chosen_album.pk]), format="json"
+        )
         # Then
         assert response.status_code == status.HTTP_204_NO_CONTENT
 
-    def test_album_detail_move_to_collection_album_on_wishlist(self, auth_api_client, albums_factory):
+    def test_album_detail_move_to_collection_album_on_wishlist(
+        self, auth_api_client, albums_factory
+    ):
         # Given
         albums = albums_factory(owned=False)
         chosen_album = choice(albums)
         # When
-        response = auth_api_client.get(reverse(ReverseURLNames.API.MOVE_TO_COLLECTION, args=[chosen_album.pk]), format='json')
+        response = auth_api_client.get(
+            reverse(ReverseURLNames.API.MOVE_TO_COLLECTION, args=[chosen_album.pk]),
+            format="json",
+        )
         # Then
         assert response.status_code == status.HTTP_200_OK
         assert ResponseStrings.MOVED_TO_COLLECTION == response.data["detail"]
 
-    def test_album_detail_move_to_collection_album_in_collection(self, auth_api_client, albums_factory):
+    def test_album_detail_move_to_collection_album_in_collection(
+        self, auth_api_client, albums_factory
+    ):
         # Given
         albums = albums_factory(owned=True)
         chosen_album = choice(albums)
         # When
-        response = auth_api_client.get(reverse(ReverseURLNames.API.MOVE_TO_COLLECTION, args=[chosen_album.pk]), format='json')
+        response = auth_api_client.get(
+            reverse(ReverseURLNames.API.MOVE_TO_COLLECTION, args=[chosen_album.pk]),
+            format="json",
+        )
         # Then
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert ResponseStrings.ALBUM_IN_COLLECTION_ERROR == response.data["detail"]

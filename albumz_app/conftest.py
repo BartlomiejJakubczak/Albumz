@@ -1,1 +1,1 @@
-from albumz_app.test_utils.fixtures import *
+from albumz_app.test_utils.fixtures import *  # noqa: F403

@@ -1,15 +1,15 @@
+from random import randint
+
 import pytest
 from django.contrib.auth import get_user_model
-from random import randint
 
 from ..constants import TEST_PASSWORD
 from ..test_utils.utils import (
-    random_user_rating, 
-    random_string, 
-    random_user_genre,
     present_date,
+    random_string,
+    random_user_genre,
+    random_user_rating,
 )
-
 
 User = get_user_model()
 user_password = TEST_PASSWORD
@@ -24,8 +24,11 @@ def test_password():
 @pytest.fixture
 def user_factory(db):
     def create_user(username=username, password=user_password, **extra_fields):
-        user = User.objects.create_user(username=username, password=password, **extra_fields)
+        user = User.objects.create_user(
+            username=username, password=password, **extra_fields
+        )
         return user
+
     return create_user
 
 
@@ -48,15 +51,17 @@ def albums_factory(db, domain_user):
             raise AttributeError("'owned' and 'mix' cannot be set simultaneously.")
         if not mix and owned is None:
             raise AttributeError("Either 'owned' or 'mix' parameter has to be set.")
+
         def create_album(owned):
             return user.albums.create(
                 title=random_string(),
                 artist=random_string(),
                 genre=random_user_genre(),
                 pub_date=present_date(),
-                user_rating = random_user_rating(),
+                user_rating=random_user_rating(),
                 owned=owned,
             )
+
         albums = []
         if mix:
             collection_count = randint(1, count - 1)
@@ -66,6 +71,7 @@ def albums_factory(db, domain_user):
         else:
             albums += [create_album(owned) for _ in range(count)]
         return albums
+
     return create_albums
 
 
@@ -83,4 +89,5 @@ def form_data_factory():
             default_form_data.update(kwargs)
             return default_form_data
         return default_form_data
+
     return make_form_data

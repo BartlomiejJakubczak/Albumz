@@ -1,23 +1,24 @@
 import pytest
 
-from ..test_utils.utils import (
-    present_date, 
-    future_date,
-)
 from ..forms.album_forms import (
-    AlbumCollectionForm, 
-    AlbumWishlistForm,
+    AlbumCollectionForm,
     AlbumSearchForm,
     AlbumUpdateForm,
+    AlbumWishlistForm,
 )
+from ..test_utils.utils import (
+    future_date,
+    present_date,
+)
+
 
 class TestAlbumUpdateForm:
     @pytest.mark.parametrize(
-            "overrides",
-            [
-                {"pub_date":"1990-09-24"}, # past date
-                {"pub_date":present_date().isoformat()} # present date
-            ]
+        "overrides",
+        [
+            {"pub_date": "1990-09-24"},  # past date
+            {"pub_date": present_date().isoformat()},  # present date
+        ],
     )
     def test_valid_form(self, overrides, form_data_factory):
         # Given
@@ -28,12 +29,12 @@ class TestAlbumUpdateForm:
         assert form.is_valid()
 
     @pytest.mark.parametrize(
-            "overrides",
-            [
-                {"pub_date":future_date().isoformat()}, # future date
-                {"title": None}, # None
-                {"title": ""}, # blank
-            ]
+        "overrides",
+        [
+            {"pub_date": future_date().isoformat()},  # future date
+            {"title": None},  # None
+            {"title": ""},  # blank
+        ],
     )
     def test_invalid_form(self, overrides, form_data_factory):
         # Given
@@ -47,11 +48,11 @@ class TestAlbumUpdateForm:
 
 class TestAlbumCollectionForm:
     @pytest.mark.parametrize(
-            "overrides",
-            [
-                {"pub_date":"1990-09-24"}, # past date
-                {"pub_date":present_date().isoformat()} # present date
-            ]
+        "overrides",
+        [
+            {"pub_date": "1990-09-24"},  # past date
+            {"pub_date": present_date().isoformat()},  # present date
+        ],
     )
     def test_valid_form(self, overrides, form_data_factory):
         # Given
@@ -62,12 +63,12 @@ class TestAlbumCollectionForm:
         assert form.is_valid()
 
     @pytest.mark.parametrize(
-            "overrides",
-            [
-                {"pub_date":future_date().isoformat()}, # future date
-                {"title": None}, # None
-                {"title": ""}, # blank
-            ]
+        "overrides",
+        [
+            {"pub_date": future_date().isoformat()},  # future date
+            {"title": None},  # None
+            {"title": ""},  # blank
+        ],
     )
     def test_invalid_form(self, overrides, form_data_factory):
         # Given
@@ -81,11 +82,11 @@ class TestAlbumCollectionForm:
 
 class TestAlbumWishlistForm:
     @pytest.mark.parametrize(
-            "overrides",
-            [
-                {"pub_date":"1990-09-24"}, # past date
-                {"pub_date":present_date().isoformat()} # present date
-            ]
+        "overrides",
+        [
+            {"pub_date": "1990-09-24"},  # past date
+            {"pub_date": present_date().isoformat()},  # present date
+        ],
     )
     def test_valid_form(self, overrides, form_data_factory):
         # Given
@@ -96,12 +97,12 @@ class TestAlbumWishlistForm:
         assert form.is_valid()
 
     @pytest.mark.parametrize(
-            "overrides",
-            [
-                {"pub_date": future_date().isoformat()}, # future date
-                {"title": None}, # None
-                {"title": ""}, # blank
-            ]
+        "overrides",
+        [
+            {"pub_date": future_date().isoformat()},  # future date
+            {"title": None},  # None
+            {"title": ""},  # blank
+        ],
     )
     def test_invalid_form(self, overrides, form_data_factory):
         # Given
@@ -112,16 +113,12 @@ class TestAlbumWishlistForm:
         assert not form.is_valid()
         assert list(overrides.keys())[0] in form.errors
 
+
 class TestAlbumSearchForm:
-    @pytest.mark.parametrize(
-            "input_value", 
-            ["", "megadeth", "meg", " megadeth "]
-    )
+    @pytest.mark.parametrize("input_value", ["", "megadeth", "meg", " megadeth "])
     def test_form_accepts_inputs(self, input_value):
         # Given
-        form_data = {
-            "query": input_value
-        }
+        form_data = {"query": input_value}
         # When
         form = AlbumSearchForm(form_data)
         # Then

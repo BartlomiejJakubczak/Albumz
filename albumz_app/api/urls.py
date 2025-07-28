@@ -1,9 +1,9 @@
-from django.urls import path, include
+from django.urls import include, path
 from rest_framework.routers import DefaultRouter
+
 from albumz_app.constants import API_APP_NAME
 
 from . import views
-
 
 router = DefaultRouter()
 router.register(r"albums", views.AlbumsViewSet, basename="album")

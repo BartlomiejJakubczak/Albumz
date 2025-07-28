@@ -1,6 +1,7 @@
+from django.contrib.auth.models import User as AuthUser
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from django.contrib.auth.models import User as AuthUser
+
 from .domain.models import User as DomainUser
 
 

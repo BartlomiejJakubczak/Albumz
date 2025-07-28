@@ -1,31 +1,25 @@
-from django.http import HttpResponseRedirect, Http404
-from django.views import generic
-from django.views.generic.edit import DeleteView, FormView, UpdateView
-from django.views.decorators.cache import never_cache
-from django.utils.decorators import method_decorator
-from django.urls import reverse_lazy, reverse
-
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import redirect_to_login
+from django.http import Http404, HttpResponseRedirect
+from django.urls import reverse, reverse_lazy
+from django.utils.decorators import method_decorator
+from django.views import generic
+from django.views.decorators.cache import never_cache
+from django.views.generic.edit import DeleteView, FormView, UpdateView
 
-from .forms.album_forms import (
-    AlbumCollectionForm, 
-    AlbumWishlistForm, 
-    AlbumSearchForm, 
-    AlbumUpdateForm,
-)
-from .domain.models import Album
+from . import constants
 from .domain.exceptions import (
-    AlbumAlreadyInCollectionError, 
+    AlbumAlreadyInCollectionError,
     AlbumAlreadyOnWishlistError,
     AlbumDoesNotExistError,
 )
-from . import constants
-
-# Create your views here. (should be as easy as possible and call model and/or optional service layer logic)
-
-# Django views return an HttpResponse object containing the content for requested page, or raise an excepiton like Http404,
-# they don't care about anything else
+from .domain.models import Album
+from .forms.album_forms import (
+    AlbumCollectionForm,
+    AlbumSearchForm,
+    AlbumUpdateForm,
+    AlbumWishlistForm,
+)
 
 
 class DetailView(LoginRequiredMixin, generic.DetailView):
@@ -36,7 +30,7 @@ class DetailView(LoginRequiredMixin, generic.DetailView):
         auth_user = self.request.user
         domain_user = auth_user.albumz_user
         return domain_user.albums.all()
-    
+
 
 class EditView(LoginRequiredMixin, UpdateView):
     template_name = constants.DirPaths.FORM_PATH.file("album_update_form.html")
@@ -64,7 +58,7 @@ class EditView(LoginRequiredMixin, UpdateView):
     def get_queryset(self):
         domain_user = self.request.user.albumz_user
         return domain_user.albums.all()
-    
+
 
 def move_to_collection_view(request, pk):
     if request.user.is_authenticated:
@@ -75,7 +69,9 @@ def move_to_collection_view(request, pk):
         except AlbumDoesNotExistError:
             raise Http404()
         except AlbumAlreadyInCollectionError:
-            return HttpResponseRedirect(reverse(constants.ReverseURLNames.DETAIL, args=(pk,)))
+            return HttpResponseRedirect(
+                reverse(constants.ReverseURLNames.DETAIL, args=(pk,))
+            )
     else:
         return redirect_to_login(request.get_full_path())
 
@@ -121,7 +117,7 @@ class AlbumAddColletionView(LoginRequiredMixin, FormView):
             form.add_error(None, constants.ResponseStrings.ALBUM_IN_COLLECTION_ERROR)
             return self.form_invalid(form)
         return super().form_valid(form)
-        
+
 
 class AlbumAddWishlistView(LoginRequiredMixin, FormView):
     template_name = constants.DirPaths.FORM_PATH.file("album_creation_form.html")
@@ -140,7 +136,7 @@ class AlbumAddWishlistView(LoginRequiredMixin, FormView):
             form.add_error(None, constants.ResponseStrings.ALBUM_ON_WISHLIST_ERROR)
             return self.form_invalid(form)
         return super().form_valid(form)
-    
+
 
 class AlbumDeleteView(LoginRequiredMixin, DeleteView):
     model = Album
@@ -149,8 +145,7 @@ class AlbumDeleteView(LoginRequiredMixin, DeleteView):
         if self.object.is_in_collection():
             return reverse_lazy(constants.ReverseURLNames.COLLECTION)
         return reverse_lazy(constants.ReverseURLNames.WISHLIST)
-    
+
     def get_queryset(self):
         domain_user = self.request.user.albumz_user
         return domain_user.albums.all()
-    
