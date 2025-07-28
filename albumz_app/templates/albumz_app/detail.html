@@ -1,23 +1,67 @@
 {% extends "albumz_app/base_albumz.html" %}
 
 {% block title %}
-    <h1>{{ album.title }}</h1>
+    <h1 class="page-title" style="margin-bottom: 0;">{{ album.title }}</h1>
 {% endblock title %}
 
 {% block content %}
-    <ul>
-        <li>Artist: {{ album.artist }}</li>
-        <li>Genre: {{ album.get_genre_display }}</li>
-        <li>Publication date: {{ album.pub_date }}</li>
-        <li>My rating: {{ album.get_user_rating_display }}</li>
-        <li>Added: {{ album.add_date }}</li>
-    </ul>
-    <a href="{% url 'albumz:delete' album.id %}">Delete</a>
-    {% if not album.owned %}
-        <a href="{% url 'albumz:move' album.id %}">Move to collection</a>
-    {% endif %}
+<div class="centered-table-container" style="align-items: flex-start; padding-top: 60px;">
+    <div class="album-detail-card" style="
+        max-width: 500px;
+        width: 100%;
+        margin: 0 auto;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        padding: 32px 24px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    ">
+        {% if album.cover_url %}
+            <img src="{{ album.cover_url }}" alt="Album cover" style="
+                width: 220px;
+                height: 220px;
+                object-fit: cover;
+                border-radius: 8px;
+                margin-bottom: 32px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+            ">
+        {% else %}
+            <div style="
+                width: 220px;
+                height: 220px;
+                background: #eee;
+                border-radius: 8px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: #aaa;
+                font-size: 1.2em;
+                margin-bottom: 32px;
+            ">
+                No cover available
+            </div>
+        {% endif %}
+        <ul style="list-style: none; padding: 0; margin-bottom: 24px; width: 100%; display: flex; flex-direction: column; align-items: center;">
+            <li style="width: 100%; text-align: center;"><strong>Artist:</strong> {{ album.artist }}</li>
+            <li style="width: 100%; text-align: center;"><strong>Genre:</strong> {{ album.get_genre_display }}</li>
+            <li style="width: 100%; text-align: center;"><strong>Publication date:</strong> {{ album.pub_date }}</li>
+            <li style="width: 100%; text-align: center;"><strong>My rating:</strong> {{ album.get_user_rating_display }}</li>
+            <li style="width: 100%; text-align: center;"><strong>Added:</strong> {{ album.add_date }}</li>
+        </ul>
+        <div style="display: flex; gap: 16px; margin-bottom: 16px;">
+            <a href="{% url 'albumz:delete' album.id %}" class="btn btn-danger">Delete</a>
+            {% if not album.owned %}
+                <a href="{% url 'albumz:move' album.id %}" class="btn btn-success">Move to collection</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
 {% endblock content %}
 
 {% block footer-content %}
-    <a href="{% url 'albumz:edit' album.id %}">Edit</a>
+    <div class="footer-content">
+        <a href="{% url 'albumz:edit' album.id %}">Edit</a>
+    </div>
 {% endblock footer-content %}
