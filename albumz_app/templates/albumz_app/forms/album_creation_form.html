@@ -1,7 +1,10 @@
-{% extends "albumz_app/base_albumz.html" %}
+{% extends "albumz_app/forms/base_form.html" %}
 
-{% block content %}
-    {% include "albumz_app/includes/album_form_include.html" with action_url=url_name %}
-{% endblock content %}
+{% block album_heading %}Create Album{% endblock album_heading %}
 
-{% block footer %}{% endblock footer %}
+{% block album_form %}
+  {% include "albumz_app/includes/album_form_include.html" with action_url=url_name %}
+{% endblock album_form %}
+
+{% block album_footer %}
+{% endblock album_footer %}

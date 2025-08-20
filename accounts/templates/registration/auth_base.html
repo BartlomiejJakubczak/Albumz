@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-center align-items-start flex-grow-1 pt-5">
+  <div class="card shadow-sm p-4" style="min-width: 350px; max-width: 450px; width: 100%;">
+    <h2 class="text-center mb-4" style="color: #0056b3;">
+      {% block auth_heading %}{% endblock auth_heading %}
+    </h2>
+    {% block auth_form %}{% endblock auth_form %}
+    <div class="text-center mt-3">
+      {% block auth_footer %}{% endblock auth_footer %}
+    </div>
+  </div>
+</div>
+{% endblock content %}

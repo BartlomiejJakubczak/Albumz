@@ -1,11 +1,13 @@
-{% extends "albumz_app/base_albumz.html" %}
+{% extends "albumz_app/forms/base_form.html" %}
 
-{% block content %}
-    <form method="post">
+{% block album_heading %}Edit Album{% endblock album_heading %}
+
+{% block album_form %}
+    <form method="post" class="app-form">
         {% csrf_token %}
         {{ form.as_p }}
-        <input type="submit" value="Update">
+        <input type="submit" value="Update" class="btn btn-primary">
     </form>
-{% endblock content %}
+{% endblock album_form %}
 
 {% block footer %}{% endblock footer %}

@@ -39,7 +39,7 @@ class User(models.Model):
         return self.auth_user.username
 
     def __str__(self) -> str:
-        return f"{self.auth_user.username}"
+        return f"{self.username}"
 
     def add_to_collection(self, unsaved_album):
         existing_album = self.albums.filter(

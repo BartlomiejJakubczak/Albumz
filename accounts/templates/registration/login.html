@@ -1,10 +1,15 @@
-{% extends "base.html" %}
+{% extends "registration/auth_base.html" %}
 
-{% block content %}
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <a href="{% url 'accounts:register' %}">Register</a>
-    <button type="submit">Login</button>
-    </form>
-{% endblock content %}
+{% block auth_heading %}Welcome Back{% endblock auth_heading %}
+
+{% block auth_form %}
+<form method="post" novalidate class="app-form">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit" class="btn btn-primary btn-block">Login</button>
+</form>
+{% endblock auth_form %}
+
+{% block auth_footer %}
+<small>Don’t have an account? <a href="{% url 'accounts:register' %}">Register</a></small>
+{% endblock auth_footer %}

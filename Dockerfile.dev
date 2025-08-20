@@ -1,0 +1,40 @@
+FROM python:3.13-alpine
+
+# By default the workdir is root
+WORKDIR /app
+
+# Prevents Python from writing pyc files to disk
+ENV PYTHONDONTWRITEBYTECODE=1
+# Prevents Python from buffering stdout and stderr
+ENV PYTHONUNBUFFERED=1
+
+RUN pip install --upgrade pip
+
+# Copy the requirements.txt to workdir of container
+COPY requirements.txt /app/
+
+COPY dev-requirements.txt /app/
+
+# run this command to install all dependencies 
+RUN pip install --no-cache-dir -r dev-requirements.txt
+
+# Copy the whole Django project to the container
+# Could be COPY . ./ since the WORKDIR is currently /app 
+COPY . .
+
+# Expose the Django port 
+# (actually does nothing, documentational puropses, but good practice to include it anyway)
+# in order to truly expose this port to outside world, you have to include it in
+# run command, specifically the -p flag (docker run -p local_port:container_port docker_image_id)
+# This will build the image with exposed port
+EXPOSE 8000
+
+# Run Django’s development server
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+
+# Images are read-only, once they are built with docker build, they are a snapshot of that build,
+# so unless the image is rebuilt, it won't propagate ANY changes
+
+# each docker instruction is a layer which result of is cached
+# the cmd command at the end is the final layer of a docker image
+# whenever a layer is changed, all of the layers after the changed one are rebuild all over again as well

@@ -1,3 +1,4 @@
+/* ===== Base Layout ===== */
 html, body {
     height: 100vh;
     margin: 0;
@@ -5,6 +6,7 @@ html, body {
     overflow: hidden; /* prevent full page scroll */
 }
 
+/* ===== Typography ===== */
 h1, h2, h3, h4, h5, h6 {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     color: #333;
@@ -20,22 +22,23 @@ h1.page-title {
     border-bottom: 1px solid #eee;
 }
 
+/* ===== Footer ===== */
 .footer {
     text-align: center;
     padding: 20px;
     background-color: #f8f9fa;
     flex-shrink: 0;
     display: flex;
-    align-items: flex-start; /* Align children to the top */
+    align-items: flex-start;
     justify-content: center;
-    height: auto; /* Or whatever fixed height you need */
+    height: auto;
 }
 
 .footer-content {
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
-    align-items: center; /* Optional: center the button horizontally */
+    align-items: center;
     padding: 0;
     margin: 0;
     height: 100%;
@@ -45,3 +48,38 @@ h1.page-title {
     margin: 0;
     padding: 0;
 }
+
+/* ===== App-wide form styling ===== */
+.app-form input[type="text"],
+.app-form input[type="password"],
+.app-form input[type="email"],
+.app-form input[type="number"],
+.app-form input[type="url"],
+.app-form input[type="tel"],
+.app-form select,
+.app-form textarea {
+    display: block;
+    width: 100%;
+    padding: 0.375rem 0.75rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: #495057;
+    background-color: #fff;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.app-form input:focus,
+.app-form select:focus,
+.app-form textarea:focus {
+    border-color: #80bdff;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+}
+
+.app-form button[type="submit"],
+.app-form input[type="submit"] {
+    margin-top: 10px;
+}
+

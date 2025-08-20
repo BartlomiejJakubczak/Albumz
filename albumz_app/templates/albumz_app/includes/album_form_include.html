@@ -1,5 +1,5 @@
-<form method="post" action="{{ action_url }}">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Create</button>
+<form method="post" action="{{ action_url }}" class="app-form">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit" class="btn btn-primary">Create</button>
 </form>
