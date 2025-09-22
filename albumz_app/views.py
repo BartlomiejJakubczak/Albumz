@@ -76,31 +76,40 @@ def move_to_collection_view(request, pk):
         return redirect_to_login(request.get_full_path())
 
 
+class AlbumsSearchMixin:
+    def get_search_queryset(self, queryset):
+        self.form = AlbumSearchForm(self.request.GET)
+        if self.form.is_valid() and self.form.cleaned_data["query"] is not None:
+            return queryset.search_query(self.form.cleaned_data["query"])
+        return queryset
+
+
 @method_decorator(never_cache, name="dispatch")
-class CollectionView(LoginRequiredMixin, generic.ListView):
-    template_name = constants.DirPaths.TEMPLATES_PATH.file("collection.html")
-    context_object_name = constants.TemplateContextVariables.ALBUMS_COLLECTION
+class AlbumsView(LoginRequiredMixin, AlbumsSearchMixin, generic.ListView):
+    mode_config = {
+        "wishlist": {
+            "template": constants.DirPaths.TEMPLATES_PATH.file("wishlist.html"),
+            "context": constants.TemplateContextVariables.ALBUMS_WISHLIST,
+            "queryset": lambda albums: albums.on_wishlist(),
+        },
+        "collection": {
+            "template": constants.DirPaths.TEMPLATES_PATH.file("collection.html"),
+            "context": constants.TemplateContextVariables.ALBUMS_COLLECTION,
+            "queryset": lambda albums: albums.in_collection(),
+        },
+    }
+
+    def get_template_names(self):
+        return self.mode_config[self.kwargs["mode"]]["template"]
+
+    def get_context_object_name(self, object_list):
+        return self.mode_config[self.kwargs["mode"]]["context"]
 
     def get_queryset(self):
         domain_user = self.request.user.albumz_user
-        queryset = domain_user.albums.in_collection()
-        self.form = AlbumSearchForm(self.request.GET)
-        if self.form.is_valid():
-            queryset = queryset.search_query(self.form.cleaned_data["query"])
-        return queryset
-
-
-class WishlistView(LoginRequiredMixin, generic.ListView):
-    template_name = constants.DirPaths.TEMPLATES_PATH.file("wishlist.html")
-    context_object_name = constants.TemplateContextVariables.ALBUMS_WISHLIST
-
-    def get_queryset(self):
-        domain_user = self.request.user.albumz_user
-        queryset = domain_user.albums.on_wishlist()
-        self.form = AlbumSearchForm(self.request.GET)
-        if self.form.is_valid():
-            queryset = queryset.search_query(self.form.cleaned_data["query"])
-        return queryset
+        return self.get_search_queryset(
+            self.mode_config[self.kwargs["mode"]]["queryset"](domain_user.albums)
+        )
 
 
 class AlbumAddColletionView(LoginRequiredMixin, FormView):

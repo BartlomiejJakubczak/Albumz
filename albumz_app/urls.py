@@ -23,9 +23,17 @@ urlpatterns = [
         name=constants.URLNames.MOVE_TO_COLLECTION,
     ),
     # ex: /albumz/collection/
+    # ex: /albumz/wishlist/
+    path(
+        "wishlist/",
+        views.AlbumsView.as_view(),
+        {"mode": "wishlist"},
+        name=constants.URLNames.WISHLIST,
+    ),
     path(
         "collection/",
-        views.CollectionView.as_view(),
+        views.AlbumsView.as_view(),
+        {"mode": "collection"},
         name=constants.URLNames.COLLECTION,
     ),
     # ex: /albumz/collection/add
@@ -34,8 +42,6 @@ urlpatterns = [
         views.AlbumAddColletionView.as_view(),
         name=constants.URLNames.ADD_TO_COLLECTION,
     ),
-    # ex: /albumz/wishlist/
-    path("wishlist/", views.WishlistView.as_view(), name=constants.URLNames.WISHLIST),
     # ex: /albumz/wishlist/add
     path(
         "wishlist/add/",
