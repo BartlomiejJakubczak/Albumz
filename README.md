@@ -1,5 +1,9 @@
 # Albumz - Manage your music album collection and wishlist with Django
 Albumz is a Django powered, containerized  portfolio web application created in order to showcase skills in Django, Docker, and modern backend practices.
+# Prerequisites
+In order to run this project locally, the following software is required to be installed:
+- `Docker`
+- `Docker-compose`
 # Features
 - User authentication (registration, login/logout, views restriction to authenticated users)
 - Album collection & wishlist management (CRUD, custom logic for adding albums both to the collection and the wishlist, moving album from wishlist to collection, removing album from wishlist if it was added to collection)
